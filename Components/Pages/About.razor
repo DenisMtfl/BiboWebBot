@@ -1,0 +1,38 @@
+@page "/about"
+
+<PageTitle>About</PageTitle>
+
+<h1>About BiboWebBot</h1>
+
+<p>
+    BiboWebBot ist eine Blazor-Server-Anwendung zum Laden und Anzeigen deiner VÖBB-Ausleihen.
+    Du kannst mehrere Konten konfigurieren, gesammelt laden und die Ergebnisse pro Konto einsehen.
+</p>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <h2 class="h5">Was die App kann</h2>
+        <ul class="mb-0">
+            <li>Mehrere Konten in der Konten-Konfiguration speichern</li>
+            <li>Ausleihen mit oder ohne Playwright laden</li>
+            <li>Ladefortschritt und technische Logs direkt in der Oberfläche anzeigen</li>
+            <li>Ergebnisse mit Konto- bzw. Login-Namen in einer Tabelle darstellen</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <h2 class="h5">Sicherheit und Hinweise</h2>
+        <ul class="mb-0">
+            <li>Zugangsdaten werden im Browser (Local Storage) gespeichert.</li>
+            <li>Nutze die App daher nur auf vertrauenswürdigen Geräten.</li>
+            <li>Die Daten werden verwendet, um deinen Ausleihstatus abzurufen.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="d-flex gap-2">
+    <a class="btn btn-primary" href="/">Zur Startseite</a>
+    <a class="btn btn-outline-secondary" href="/accounts">Zur Konten Konfiguration</a>
+</div>
