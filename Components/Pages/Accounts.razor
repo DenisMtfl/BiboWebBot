@@ -1,0 +1,206 @@
+@page "/accounts"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+<PageTitle>Konten Konfiguration</PageTitle>
+
+<h1>Konten Konfiguration</h1>
+<p>Hier verwaltest du gespeicherte VÖBB-Konten und markierst Konten für das gleichzeitige Laden.</p>
+
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="alert @(isError ? "alert-danger" : "alert-info")">@statusMessage</div>
+}
+
+<EditForm Model="@newAccount" OnValidSubmit="AddOrUpdateAccountAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="border rounded p-3 mb-3">
+        <div class="mb-3">
+            <label class="form-label" for="accountLoginName">Login-Name</label>
+            <InputText id="accountLoginName" class="form-control" @bind-Value="newAccount.LoginName" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="accountCardId">Bibliotheksausweis</label>
+            <InputText id="accountCardId" class="form-control" @bind-Value="newAccount.CardId" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="accountPassword">Passwort</label>
+            <InputText id="accountPassword" class="form-control" type="password" @bind-Value="newAccount.Password" />
+        </div>
+        <button type="submit" class="btn btn-primary" disabled="@isBusy">Konto speichern</button>
+    </div>
+</EditForm>
+
+@if (savedAccounts.Count == 0)
+{
+    <p>Noch keine Konten gespeichert.</p>
+}
+else
+{
+    <div class="border rounded p-3">
+        <h2 class="h5 mb-3">Gespeicherte Konten</h2>
+        @foreach (var account in savedAccounts)
+        {
+            var cardId = account.CardId ?? string.Empty;
+            <div class="d-flex flex-wrap align-items-center justify-content-between border rounded p-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold">@(string.IsNullOrWhiteSpace(account.LoginName) ? cardId : account.LoginName)</span>
+                    <span class="text-muted">(@cardId)</span>
+                    <span class="text-muted">(Passwort gespeichert)</span>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="form-check m-0">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="pref-@cardId"
+                               checked="@selectedBatchCardIds.Contains(cardId)"
+                               @onchange="(args) => ToggleBatchSelection(cardId, args.Value)" />
+                        <label class="form-check-label" for="pref-@cardId">Für Sammelladen markieren</label>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveAccountAsync(cardId)" disabled="@isBusy">Löschen</button>
+                </div>
+            </div>
+        }
+
+        <button type="button" class="btn btn-outline-danger mt-2" @onclick="ClearAllAsync" disabled="@isBusy">Alle Konten löschen</button>
+    </div>
+}
+
+@code {
+    private const string CredentialsStorageKey = "bibo.credentials";
+    private const string BatchSelectionStorageKey = "bibo.batchSelection";
+
+    private readonly SavedVoebbAccount newAccount = new();
+    private List<SavedVoebbAccount> savedAccounts = [];
+    private HashSet<string> selectedBatchCardIds = [];
+    private string statusMessage = string.Empty;
+    private bool isError;
+    private bool isBusy;
+    private bool loaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (loaded)
+        {
+            return;
+        }
+
+        try
+        {
+            await LoadFromBrowserAsync();
+            loaded = true;
+            StateHasChanged();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("prerender", StringComparison.OrdinalIgnoreCase))
+        {
+            // JS interop is not available during prerendering; retry on interactive render.
+        }
+    }
+
+    private async Task LoadFromBrowserAsync()
+    {
+        savedAccounts = (await JS.InvokeAsync<List<SavedVoebbAccount>?>("biboCredentialsStorage.loadMany", CredentialsStorageKey) ?? [])
+            .Where(x => !string.IsNullOrWhiteSpace(x.LoginName)
+                && !string.IsNullOrWhiteSpace(x.CardId)
+                && !string.IsNullOrWhiteSpace(x.Password))
+            .GroupBy(x => x.CardId)
+            .Select(g => g.Last())
+            .OrderBy(x => x.CardId)
+            .ToList();
+
+        var selected = await JS.InvokeAsync<List<string>?>("biboCredentialsStorage.loadSelection", BatchSelectionStorageKey) ?? [];
+        selectedBatchCardIds = selected
+            .Where(x => savedAccounts.Any(a => string.Equals(a.CardId, x, StringComparison.Ordinal)))
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
+    private async Task AddOrUpdateAccountAsync()
+    {
+        var cardId = (newAccount.CardId ?? string.Empty).Trim();
+        var loginName = (newAccount.LoginName ?? string.Empty).Trim();
+        var password = newAccount.Password ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(loginName)
+            || string.IsNullOrWhiteSpace(cardId)
+            || string.IsNullOrWhiteSpace(password))
+        {
+            statusMessage = "Login-Name, Bibliotheksausweis und Passwort sind erforderlich.";
+            isError = true;
+            return;
+        }
+
+        isBusy = true;
+        var existing = savedAccounts.FirstOrDefault(x => string.Equals(x.CardId, cardId, StringComparison.Ordinal));
+        if (existing is null)
+        {
+            savedAccounts.Add(new SavedVoebbAccount
+            {
+                LoginName = loginName,
+                CardId = cardId,
+                Password = password
+            });
+        }
+        else
+        {
+            existing.LoginName = loginName;
+            existing.Password = password;
+        }
+
+        savedAccounts = savedAccounts.OrderBy(x => x.CardId).ToList();
+        await PersistAsync();
+
+        newAccount.LoginName = string.Empty;
+        newAccount.CardId = string.Empty;
+        newAccount.Password = string.Empty;
+        statusMessage = "Konto gespeichert.";
+        isError = false;
+        isBusy = false;
+    }
+
+    private async Task RemoveAccountAsync(string cardId)
+    {
+        isBusy = true;
+        savedAccounts.RemoveAll(x => string.Equals(x.CardId, cardId, StringComparison.Ordinal));
+        selectedBatchCardIds.Remove(cardId);
+        await PersistAsync();
+        statusMessage = "Konto gelöscht.";
+        isError = false;
+        isBusy = false;
+    }
+
+    private async Task ClearAllAsync()
+    {
+        isBusy = true;
+        savedAccounts.Clear();
+        selectedBatchCardIds.Clear();
+        await JS.InvokeVoidAsync("biboCredentialsStorage.clear", CredentialsStorageKey);
+        await JS.InvokeVoidAsync("biboCredentialsStorage.clear", BatchSelectionStorageKey);
+        statusMessage = "Alle Konten wurden gelöscht.";
+        isError = false;
+        isBusy = false;
+    }
+
+    private async Task ToggleBatchSelection(string cardId, object? value)
+    {
+        var isChecked = value as bool? ?? false;
+        if (isChecked)
+        {
+            selectedBatchCardIds.Add(cardId);
+        }
+        else
+        {
+            selectedBatchCardIds.Remove(cardId);
+        }
+
+        await JS.InvokeVoidAsync("biboCredentialsStorage.saveSelection", BatchSelectionStorageKey, selectedBatchCardIds.ToList());
+    }
+
+    private async Task PersistAsync()
+    {
+        await JS.InvokeVoidAsync("biboCredentialsStorage.saveMany", CredentialsStorageKey, savedAccounts);
+        selectedBatchCardIds.RemoveWhere(cardId => savedAccounts.All(x => !string.Equals(x.CardId, cardId, StringComparison.Ordinal)));
+        await JS.InvokeVoidAsync("biboCredentialsStorage.saveSelection", BatchSelectionStorageKey, selectedBatchCardIds.ToList());
+    }
+}

@@ -1,0 +1,280 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject IVoebbAutomationService VoebbAutomationService
+@inject Microsoft.JSInterop.IJSRuntime JS
+
+<PageTitle>VÖBB Konto</PageTitle>
+
+<h1>VÖBB Ausleihen &amp; Verlängerung</h1>
+<p>Konten und Sammelauswahl verwaltest du im Menüpunkt <a href="/accounts">Konten Konfiguration</a>.</p>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <div class="fw-semibold mb-2">Lademodus</div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" id="modePlaywright" name="loadMode" checked="@(selectedLoadMode == LoadMode.Playwright)" @onchange="() => selectedLoadMode = LoadMode.Playwright" />
+            <label class="form-check-label" for="modePlaywright">Mit Playwright</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" id="modeHttp" name="loadMode" checked="@(selectedLoadMode == LoadMode.WithoutPlaywright)" @onchange="() => selectedLoadMode = LoadMode.WithoutPlaywright" />
+            <label class="form-check-label" for="modeHttp">Ohne Playwright (HTTP)</label>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex gap-2 mb-4">
+    <button type="button" class="btn btn-primary" @onclick="LoadLoansForConfiguredAccountsAsync" disabled="@(isBusy || !hasConfiguredBatchAccounts)">
+        @if (isBusy)
+        {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span>Lade...</span>
+        }
+        else
+        {
+            <span>Ausleihen fuer konfigurierte Konten laden</span>
+        }
+    </button>
+</div>
+
+@if (isBusy)
+{
+    <div class="alert alert-info d-flex align-items-center" role="status" aria-live="polite">
+        <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+        <span>Konten werden geladen. Bitte warten...</span>
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="alert @(isError ? "alert-danger" : "alert-info")">@statusMessage</div>
+}
+
+@if (playwrightStatusLogs.Count > 0)
+{
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h6 mb-0">Lade-Status</h2>
+                <span class="badge text-bg-secondary">@playwrightStatusLogs.Count Logs</span>
+            </div>
+            <div class="bg-light border rounded p-2" style="max-height: 260px; overflow-y: auto;">
+                @foreach (var entry in playwrightStatusLogs.AsEnumerable().Reverse())
+                {
+                    <div class="small font-monospace text-break">@entry</div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@if (loans.Count > 0)
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Ausleihen</h2>
+                <span class="badge text-bg-primary">@loans.Count Einträge</span>
+            </div>
+            <div class="table-responsive">
+                <QuickGrid Items="loans.AsQueryable()" Class="table table-striped table-hover align-middle mb-0">
+                    <PropertyColumn Property="loan => loan.AccountCardId" Title="Login-Name" Sortable="true" />
+                    <TemplateColumn Title="Name">
+                        @if (string.IsNullOrWhiteSpace(context.LoanName))
+                        {
+                            <span>-</span>
+                        }
+                        else
+                        {
+                            <span>@context.LoanName</span>
+                        }
+                    </TemplateColumn>
+                    <TemplateColumn Title="Fällig">
+                        @if (string.IsNullOrWhiteSpace(context.DueDate))
+                        {
+                            <span>-</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-light border">@context.DueDate</span>
+                        }
+                    </TemplateColumn>
+                </QuickGrid>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private const string CredentialsStorageKey = "bibo.credentials";
+    private const string BatchSelectionStorageKey = "bibo.batchSelection";
+    private const int MaxLoadAttemptsPerAccount = 2;
+
+    private List<VoebbLoanItem> loans = [];
+    private string statusMessage = string.Empty;
+    private List<string> playwrightStatusLogs = [];
+    private bool isError;
+    private bool isBusy;
+    private bool browserConfigLoaded;
+    private bool hasConfiguredBatchAccounts;
+    private LoadMode selectedLoadMode = LoadMode.Playwright;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (browserConfigLoaded)
+        {
+            return;
+        }
+
+        try
+        {
+            hasConfiguredBatchAccounts = await HasConfiguredBatchAccountsAsync();
+            browserConfigLoaded = true;
+            StateHasChanged();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("prerender", StringComparison.OrdinalIgnoreCase))
+        {
+            // JS interop is not available during prerendering; retry on the interactive render.
+        }
+    }
+
+    private async Task LoadLoansForConfiguredAccountsAsync()
+    {
+        var savedAccounts = await JS.InvokeAsync<List<SavedVoebbAccount>?>("biboCredentialsStorage.loadMany", CredentialsStorageKey) ?? [];
+        var selectedCardIds = await JS.InvokeAsync<List<string>?>("biboCredentialsStorage.loadSelection", BatchSelectionStorageKey) ?? [];
+
+        var selected = savedAccounts
+            .Where(x => !string.IsNullOrWhiteSpace(x.LoginName)
+                && !string.IsNullOrWhiteSpace(x.CardId)
+                && !string.IsNullOrWhiteSpace(x.Password)
+                && selectedCardIds.Contains(x.CardId!))
+            .GroupBy(x => x.CardId)
+            .Select(g => g.Last())
+            .ToList();
+
+        if (selected.Count == 0)
+        {
+            statusMessage = "Keine konfigurierten Konten mit Login-Name gefunden. Bitte in Konten Konfiguration fuer jedes Konto einen Login-Namen pflegen und fuer Sammelladen markieren.";
+            isError = true;
+            hasConfiguredBatchAccounts = false;
+            return;
+        }
+
+        isBusy = true;
+        statusMessage = string.Empty;
+        playwrightStatusLogs = [];
+        isError = false;
+        StateHasChanged();
+
+        var results = new List<(string AccountLabel, VoebbOperationResult Result)>();
+        foreach (var account in selected)
+        {
+            var accountCredentials = new VoebbCredentials
+            {
+                CardId = account.CardId ?? string.Empty,
+                Password = account.Password ?? string.Empty
+            };
+
+            var result = await LoadLoansWithRetryAsync(accountCredentials);
+            var accountLabel = account.LoginName!.Trim();
+            results.Add((accountLabel, result));
+
+            if (result.Logs.Count > 0)
+            {
+                playwrightStatusLogs.AddRange(result.Logs.Select(log => $"[{accountLabel}] {log}"));
+                StateHasChanged();
+            }
+        }
+
+        loans = results
+            .SelectMany(x => x.Result.Loans.Select(loan => new VoebbLoanItem
+            {
+                RenewIndex = -1,
+                AccountCardId = x.AccountLabel,
+                LoanName = loan.LoanName,
+                Title = loan.Title,
+                DueDate = loan.DueDate,
+                Details = loan.Details
+            }))
+            .OrderBy(x => x.AccountCardId)
+            .ThenBy(x => x.DueDate)
+            .ToList();
+
+        var successCount = results.Count(x => x.Result.Success);
+        var errorMessages = results
+            .Where(x => !x.Result.Success)
+            .Select(x => $"{x.AccountLabel}: {x.Result.Message}")
+            .ToList();
+
+        statusMessage = errorMessages.Count == 0
+            ? $"Ausleihen für {successCount} Konto/Konten geladen."
+            : $"Teilweise geladen ({successCount}/{results.Count}). {string.Join(" | ", errorMessages)}";
+        isError = errorMessages.Count > 0;
+        isBusy = false;
+        hasConfiguredBatchAccounts = true;
+    }
+
+    private async Task<VoebbOperationResult> LoadLoansWithRetryAsync(VoebbCredentials credentials)
+    {
+        VoebbOperationResult? lastResult = null;
+        var aggregatedLogs = new List<string>();
+
+        for (var attempt = 1; attempt <= MaxLoadAttemptsPerAccount; attempt++)
+        {
+            var result = selectedLoadMode == LoadMode.Playwright
+                ? await VoebbAutomationService.LoadLoansAsync(credentials)
+                : await VoebbAutomationService.LoadLoansWithoutPlaywrightAsync(credentials);
+
+            lastResult = result;
+            if (result.Logs.Count > 0)
+            {
+                aggregatedLogs.Add($"Versuch {attempt}:");
+                aggregatedLogs.AddRange(result.Logs);
+            }
+
+            if (result.Success || !IsRetryableTimeout(result.Message) || attempt == MaxLoadAttemptsPerAccount)
+            {
+                return new VoebbOperationResult
+                {
+                    Success = result.Success,
+                    Message = result.Message,
+                    Loans = result.Loans,
+                    Logs = aggregatedLogs
+                };
+            }
+
+            aggregatedLogs.Add("Warte kurz und versuche erneut.");
+            await Task.Delay(TimeSpan.FromSeconds(attempt * 2));
+        }
+
+        return lastResult is null
+            ? new VoebbOperationResult { Success = false, Message = "Unbekannter Fehler beim Laden.", Logs = aggregatedLogs }
+            : new VoebbOperationResult
+            {
+                Success = lastResult.Success,
+                Message = lastResult.Message,
+                Loans = lastResult.Loans,
+                Logs = aggregatedLogs
+            };
+    }
+
+    private static bool IsRetryableTimeout(string message)
+        => !string.IsNullOrWhiteSpace(message)
+            && message.Contains("Zeitüberschreitung", StringComparison.OrdinalIgnoreCase);
+
+    private async Task<bool> HasConfiguredBatchAccountsAsync()
+    {
+        var savedAccounts = await JS.InvokeAsync<List<SavedVoebbAccount>?>("biboCredentialsStorage.loadMany", CredentialsStorageKey) ?? [];
+        var selectedCardIds = await JS.InvokeAsync<List<string>?>("biboCredentialsStorage.loadSelection", BatchSelectionStorageKey) ?? [];
+
+        return savedAccounts.Any(x => !string.IsNullOrWhiteSpace(x.CardId)
+            && !string.IsNullOrWhiteSpace(x.LoginName)
+            && !string.IsNullOrWhiteSpace(x.Password)
+            && selectedCardIds.Contains(x.CardId!));
+    }
+
+    private enum LoadMode
+    {
+        Playwright,
+        WithoutPlaywright
+    }
+}
