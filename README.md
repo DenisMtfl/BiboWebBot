@@ -1,16 +1,16 @@
 # BiboWebBot
 
-BiboWebBot is a Blazor Server app to load and display VÖBB loan data for one or more accounts.
+BiboWebBot ist eine Blazor-Server-Anwendung, um VÖBB-Ausleihen fuer ein oder mehrere Konten zu laden und anzuzeigen.
 
 ## Features
 
-- Multi-account configuration page
-- Parallel/sequential loading with visible status logs
-- Two loading modes:
-  - Playwright (browser automation)
-  - HTTP mode (without Playwright)
-- Loan list UI with account/login name in each row
-- Local browser storage for saved account credentials and selected accounts
+- Konfigurationsseite fuer mehrere Konten
+- Laden mehrerer Konten mit sichtbaren Status-Logs
+- Zwei Lademodi:
+  - Playwright (Browser-Automation)
+  - HTTP-Modus (ohne Playwright)
+- Ausleihliste mit Konto-/Login-Name pro Zeile
+- Browser-Storage fuer gespeicherte Konten und Auswahl
 
 ## Tech Stack
 
@@ -21,63 +21,63 @@ BiboWebBot is a Blazor Server app to load and display VÖBB loan data for one or
 
 ## Prerequisites
 
-- .NET SDK 10 installed
-- On first Playwright use: Playwright browser binaries installed
+- .NET SDK 10 installiert
+- Bei erster Playwright-Nutzung: Browser-Binaries installieren
 
 ## Getting Started
 
-1. Restore and build:
+1. Wiederherstellen und bauen:
 
 ```bash
 dotnet restore
 dotnet build
 ```
 
-2. (Optional, for Playwright mode) Install Playwright browsers:
+2. Optional fuer Playwright: Browser installieren:
 
 ```bash
 dotnet build
 pwsh bin/Debug/net10.0/playwright.ps1 install
 ```
 
-3. Run the app:
+3. Anwendung starten:
 
 ```bash
 dotnet run
 ```
 
-4. Open the local URL shown in the terminal (usually `https://localhost:xxxx`).
+4. Lokale URL aus dem Terminal aufrufen (meist `https://localhost:xxxx`).
 
 ## Usage
 
-1. Open the account configuration page in the app (`Konten Konfiguration`).
-2. Add one or more VÖBB accounts:
-   - Login name (display name in UI)
+1. In der App die Seite Konten Konfiguration oeffnen.
+2. Ein oder mehrere VÖBB-Konten hinzufuegen:
+   - Login-Name (Anzeige in der UI)
    - Card ID
-   - Password
-3. Save and select the accounts to load.
-4. Go to Home and choose mode:
-   - `Mit Playwright`
-   - `Ohne Playwright`
-5. Start loading and watch status/log output.
+   - Passwort
+3. Konten speichern und zur Sammelauswahl markieren.
+4. Auf der Startseite den Modus waehlen:
+   - Mit Playwright
+   - Ohne Playwright (HTTP)
+5. Laden starten und Status/Logs beobachten.
 
 ## Security Notes
 
-- Credentials are stored in browser local storage for convenience.
-- Use only on trusted devices.
-- Do not share exported browser profiles.
+- Zugangsdaten werden zur Komfortnutzung im Browser-Storage gespeichert.
+- Nur auf vertrauenswuerdigen Geraeten verwenden.
+- Exportierte Browser-Profile nicht weitergeben.
 
 ## Project Structure
 
-- `Components/Pages/Home.razor`: Loan loading and result table
-- `Components/Pages/Accounts.razor`: Account configuration UI
-- `Services/VoebbAutomationService.cs`: Login, navigation, scraping logic
-- `Models/`: DTOs for accounts, loans, and operation results
-- `wwwroot/credentialsStorage.js`: Browser local storage helper
+- `Components/Pages/Home.razor`: Laden der Ausleihen und Ergebnistabelle
+- `Components/Pages/Accounts.razor`: Konten-Konfiguration
+- `Services/VoebbAutomationService.cs`: Login-, Navigation- und Scraping-Logik
+- `Models/`: Datenmodelle fuer Konten, Ausleihen und Ergebnisobjekte
+- `wwwroot/credentialsStorage.js`: Browser-Storage-Helfer
 
 ## Build Status
 
-The project currently builds successfully with:
+Das Projekt baut aktuell erfolgreich mit:
 
 ```bash
 dotnet build
