@@ -64,6 +64,7 @@ dotnet run
 ## Security Notes
 
 - Zugangsdaten werden zur Komfortnutzung im Browser-Storage gespeichert.
+- Alternativ koennen Konten zentral in `appsettings*.json` unter `Voebb:Accounts` gepflegt werden (`LoginName`, `CardId`, `Password`, optional `LoadForBatch`).
 - Nur auf vertrauenswuerdigen Geraeten verwenden.
 - Exportierte Browser-Profile nicht weitergeben.
 

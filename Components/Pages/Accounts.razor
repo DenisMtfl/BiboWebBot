@@ -1,11 +1,19 @@
 @page "/accounts"
 @rendermode InteractiveServer
 @inject IJSRuntime JS
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
 <PageTitle>Konten Konfiguration</PageTitle>
 
 <h1>Konten Konfiguration</h1>
 <p>Hier verwaltest du gespeicherte VÖBB-Konten und markierst Konten für das gleichzeitige Laden.</p>
+
+@if (appSettingsAccounts.Count > 0)
+{
+    <div class="alert alert-secondary">
+        Zusätzlich sind @appSettingsAccounts.Count Konto/Konten in <code>appsettings*.json</code> unter <code>Voebb:Accounts</code> konfiguriert.
+    </div>
+}
 
 @if (!string.IsNullOrWhiteSpace(statusMessage))
 {
@@ -64,6 +72,32 @@ else
             </div>
         }
 
+@if (appSettingsAccounts.Count > 0)
+{
+    <div class="border rounded p-3 mt-3">
+        <h2 class="h5 mb-3">Konten aus appsettings (nur Lesen)</h2>
+        @foreach (var account in appSettingsAccounts)
+        {
+            var cardId = account.CardId ?? string.Empty;
+            <div class="d-flex flex-wrap align-items-center justify-content-between border rounded p-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold">@(string.IsNullOrWhiteSpace(account.LoginName) ? cardId : account.LoginName)</span>
+                    <span class="text-muted">(@cardId)</span>
+                    <span class="text-muted">(Passwort in appsettings)</span>
+                </div>
+                @if (account.LoadForBatch)
+                {
+                    <span class="badge text-bg-primary">Für Sammelladen aktiv</span>
+                }
+                else
+                {
+                    <span class="badge text-bg-light border">Für Sammelladen aus</span>
+                }
+            </div>
+        }
+    </div>
+}
+
         <button type="button" class="btn btn-outline-danger mt-2" @onclick="ClearAllAsync" disabled="@isBusy">Alle Konten löschen</button>
     </div>
 }
@@ -74,6 +108,7 @@ else
 
     private readonly SavedVoebbAccount newAccount = new();
     private List<SavedVoebbAccount> savedAccounts = [];
+    private List<AppSettingsVoebbAccount> appSettingsAccounts = [];
     private HashSet<string> selectedBatchCardIds = [];
     private string statusMessage = string.Empty;
     private bool isError;
@@ -101,6 +136,8 @@ else
 
     private async Task LoadFromBrowserAsync()
     {
+        appSettingsAccounts = LoadFromAppSettings();
+
         savedAccounts = (await JS.InvokeAsync<List<SavedVoebbAccount>?>("biboCredentialsStorage.loadMany", CredentialsStorageKey) ?? [])
             .Where(x => !string.IsNullOrWhiteSpace(x.LoginName)
                 && !string.IsNullOrWhiteSpace(x.CardId)
@@ -114,6 +151,22 @@ else
         selectedBatchCardIds = selected
             .Where(x => savedAccounts.Any(a => string.Equals(a.CardId, x, StringComparison.Ordinal)))
             .ToHashSet(StringComparer.Ordinal);
+    }
+
+    private List<AppSettingsVoebbAccount> LoadFromAppSettings()
+    {
+        var configuredAccounts = Configuration
+            .GetSection("Voebb:Accounts")
+            .Get<List<AppSettingsVoebbAccount>>() ?? [];
+
+        return configuredAccounts
+            .Where(x => !string.IsNullOrWhiteSpace(x.LoginName)
+                && !string.IsNullOrWhiteSpace(x.CardId)
+                && !string.IsNullOrWhiteSpace(x.Password))
+            .GroupBy(x => x.CardId)
+            .Select(g => g.Last())
+            .OrderBy(x => x.CardId)
+            .ToList();
     }
 
     private async Task AddOrUpdateAccountAsync()

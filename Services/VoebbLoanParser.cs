@@ -47,6 +47,11 @@ public static class VoebbLoanParser
             return string.Empty;
         }
 
+        static bool LooksLikeLibraryColumn(string value)
+            => !string.IsNullOrWhiteSpace(value)
+                && value.Contains("bibliothek", StringComparison.OrdinalIgnoreCase)
+                && value.Contains(':', StringComparison.Ordinal);
+
         var result = new List<VoebbLoanItem>();
         var rows = Regex.Matches(html, "<tr[^>]*>(?<row>.*?)</tr>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -67,15 +72,36 @@ public static class VoebbLoanParser
                 continue;
             }
 
-            var hasCheckboxColumn = rowHtml.Contains("checkbox", StringComparison.OrdinalIgnoreCase) && cells.Count >= 4;
-            var dueCellIndex = hasCheckboxColumn ? 1 : 0;
-            var titleCellIndex = hasCheckboxColumn ? Math.Min(3, cells.Count - 1) : Math.Min(2, cells.Count - 1);
-
-            var dueDate = Regex.Match(cells[dueCellIndex], "(\\d{1,2}\\.\\d{1,2}\\.\\d{2,4})").Groups[1].Value;
-            var titleText = cells[titleCellIndex];
-            if (string.IsNullOrWhiteSpace(titleText))
+            var dateRegex = new Regex("(\\d{1,2}\\.\\d{1,2}\\.\\d{2,4})", RegexOptions.Compiled);
+            var dueCellIndex = cells.FindIndex(cell => dateRegex.IsMatch(cell));
+            if (dueCellIndex < 0)
             {
                 continue;
+            }
+
+            var dueDate = dateRegex.Match(cells[dueCellIndex]).Groups[1].Value;
+            if (string.IsNullOrWhiteSpace(dueDate))
+            {
+                continue;
+            }
+
+            var titleCellIndex = Math.Min(dueCellIndex + 2, cells.Count - 1);
+            var titleText = cells[titleCellIndex];
+            if (string.IsNullOrWhiteSpace(titleText) || LooksLikeLibraryColumn(titleText))
+            {
+                var titleFallback = cells
+                    .Skip(dueCellIndex + 1)
+                    .FirstOrDefault(cell => !string.IsNullOrWhiteSpace(cell)
+                        && !LooksLikeLibraryColumn(cell)
+                        && !cell.Contains("hinweis", StringComparison.OrdinalIgnoreCase)
+                        && !dateRegex.IsMatch(cell));
+
+                if (string.IsNullOrWhiteSpace(titleFallback))
+                {
+                    continue;
+                }
+
+                titleText = titleFallback;
             }
 
             var lines = Regex.Split(titleText, "\\s*\\|\\s*|\\r?\\n").Where(x => !string.IsNullOrWhiteSpace(x));

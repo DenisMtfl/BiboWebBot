@@ -47,5 +47,27 @@ window.biboCredentialsStorage = {
     } catch {
       return [];
     }
+  },
+
+  syncEarliestLoanToGoogleCalendar: async function (dueDate, accountLabel) {
+    if (!dueDate) {
+      return false;
+    }
+
+    try {
+      const params = new URLSearchParams({ dueDate });
+      if (accountLabel) {
+        params.set("accountLabel", accountLabel);
+      }
+
+      const response = await fetch(`/api/google-calendar/sync-earliest?${params.toString()}`, {
+        method: "GET",
+        credentials: "include"
+      });
+
+      return response.ok;
+    } catch {
+      return false;
+    }
   }
 };

@@ -20,3 +20,4 @@ obj/
 
 # Playwright artifacts
 .playwright/
+/appsettings.json
