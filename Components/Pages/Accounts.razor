@@ -5,8 +5,10 @@
 
 <PageTitle>Konten Konfiguration</PageTitle>
 
-<h1>Konten Konfiguration</h1>
-<p>Hier verwaltest du gespeicherte VÖBB-Konten und markierst Konten für das gleichzeitige Laden.</p>
+<section class="page-header mb-3">
+    <h1>Konten Konfiguration</h1>
+    <p class="text-muted mb-0">Hier verwaltest du gespeicherte VÖBB-Konten und markierst Konten für das gleichzeitige Laden.</p>
+</section>
 
 @if (appSettingsAccounts.Count > 0)
 {
@@ -20,11 +22,63 @@
     <div class="alert @(isError ? "alert-danger" : "alert-info")">@statusMessage</div>
 }
 
+<div class="card mb-3">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Google-Kalender Konfiguration</h2>
+        <AuthorizeView>
+            <Authorized>
+                @if (!string.IsNullOrWhiteSpace(calendarStatusMessage))
+                {
+                    <div class="alert @(calendarIsError ? "alert-danger" : "alert-info")">@calendarStatusMessage</div>
+                }
+                <div class="mb-3">
+                    <label class="form-label" for="calendarSelect">Google-Kalender</label>
+                    <div class="d-flex gap-2">
+                        <select id="calendarSelect" class="form-select" @bind="calendarSettings.CalendarId">
+                            @if (availableCalendars.Count == 0)
+                            {
+                                <option value="">-- Kalender laden --</option>
+                            }
+                            @foreach (var calendar in availableCalendars)
+                            {
+                                <option value="@calendar.Id">@(calendar.IsPrimary ? $"{calendar.Summary} (Primär)" : calendar.Summary)</option>
+                            }
+                        </select>
+                        <button type="button" class="btn btn-outline-secondary text-nowrap" @onclick="LoadAvailableCalendarsAsync" disabled="@calendarsLoading">
+                            @if (calendarsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            }
+                            else
+                            {
+                                <span>Kalender laden</span>
+                            }
+                        </button>
+                    </div>
+                    <div class="form-text">Wähle den Kalender, in den das früheste Rückgabedatum eingetragen werden soll.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="eventNameTemplate">Termin-Name</label>
+                    <input id="eventNameTemplate" class="form-control" @bind="calendarSettings.EventSummaryTemplate" placeholder="VÖBB: Früheste Rückgabe {Konto} ({Datum})" />
+                    <div class="form-text">Platzhalter: <code>{Konto}</code> für den Kontonamen, <code>{Datum}</code> für das Fälligkeitsdatum.</div>
+                </div>
+                <button type="button" class="btn btn-primary" @onclick="SaveGoogleCalendarSettingsAsync">Kalender-Einstellungen speichern</button>
+            </Authorized>
+            <NotAuthorized>
+                <div class="alert alert-secondary mb-0">
+                    Melde dich zuerst per <a href="/auth/google/login?returnUrl=/accounts">Google Login</a> an, um verfügbare Kalender auszuwählen.
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
+
 <EditForm Model="@newAccount" OnValidSubmit="AddOrUpdateAccountAsync">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <div class="border rounded p-3 mb-3">
+    <div class="card mb-3">
+        <div class="card-body">
         <div class="mb-3">
             <label class="form-label" for="accountLoginName">Login-Name</label>
             <InputText id="accountLoginName" class="form-control" @bind-Value="newAccount.LoginName" />
@@ -38,6 +92,7 @@
             <InputText id="accountPassword" class="form-control" type="password" @bind-Value="newAccount.Password" />
         </div>
         <button type="submit" class="btn btn-primary" disabled="@isBusy">Konto speichern</button>
+        </div>
     </div>
 </EditForm>
 
@@ -47,12 +102,13 @@
 }
 else
 {
-    <div class="border rounded p-3">
+    <div class="card">
+        <div class="card-body">
         <h2 class="h5 mb-3">Gespeicherte Konten</h2>
         @foreach (var account in savedAccounts)
         {
             var cardId = account.CardId ?? string.Empty;
-            <div class="d-flex flex-wrap align-items-center justify-content-between border rounded p-2 mb-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between border rounded-3 p-3 mb-2 bg-white">
                 <div class="d-flex align-items-center gap-2">
                     <span class="fw-semibold">@(string.IsNullOrWhiteSpace(account.LoginName) ? cardId : account.LoginName)</span>
                     <span class="text-muted">(@cardId)</span>
@@ -74,12 +130,13 @@ else
 
 @if (appSettingsAccounts.Count > 0)
 {
-    <div class="border rounded p-3 mt-3">
+    <div class="card mt-3">
+        <div class="card-body">
         <h2 class="h5 mb-3">Konten aus appsettings (nur Lesen)</h2>
         @foreach (var account in appSettingsAccounts)
         {
             var cardId = account.CardId ?? string.Empty;
-            <div class="d-flex flex-wrap align-items-center justify-content-between border rounded p-2 mb-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between border rounded-3 p-3 mb-2 bg-white">
                 <div class="d-flex align-items-center gap-2">
                     <span class="fw-semibold">@(string.IsNullOrWhiteSpace(account.LoginName) ? cardId : account.LoginName)</span>
                     <span class="text-muted">(@cardId)</span>
@@ -95,16 +152,19 @@ else
                 }
             </div>
         }
+        </div>
     </div>
 }
 
         <button type="button" class="btn btn-outline-danger mt-2" @onclick="ClearAllAsync" disabled="@isBusy">Alle Konten löschen</button>
+        </div>
     </div>
 }
 
 @code {
     private const string CredentialsStorageKey = "bibo.credentials";
     private const string BatchSelectionStorageKey = "bibo.batchSelection";
+    private const string GoogleCalendarSettingsStorageKey = "bibo.googleCalendarSettings";
 
     private readonly SavedVoebbAccount newAccount = new();
     private List<SavedVoebbAccount> savedAccounts = [];
@@ -114,6 +174,12 @@ else
     private bool isError;
     private bool isBusy;
     private bool loaded;
+
+    private readonly GoogleCalendarSettings calendarSettings = new();
+    private List<GoogleCalendarInfo> availableCalendars = [];
+    private bool calendarsLoading;
+    private string calendarStatusMessage = string.Empty;
+    private bool calendarIsError;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -125,6 +191,7 @@ else
         try
         {
             await LoadFromBrowserAsync();
+            await LoadGoogleCalendarSettingsFromBrowserAsync();
             loaded = true;
             StateHasChanged();
         }
@@ -132,6 +199,68 @@ else
         {
             // JS interop is not available during prerendering; retry on interactive render.
         }
+    }
+
+    private async Task LoadGoogleCalendarSettingsFromBrowserAsync()
+    {
+        var stored = await JS.InvokeAsync<GoogleCalendarSettings?>("biboCredentialsStorage.loadGoogleCalendarSettings", GoogleCalendarSettingsStorageKey);
+        if (stored is not null)
+        {
+            calendarSettings.CalendarId = stored.CalendarId;
+            calendarSettings.EventSummaryTemplate = stored.EventSummaryTemplate;
+        }
+
+        if (!string.IsNullOrWhiteSpace(calendarSettings.CalendarId))
+        {
+            await LoadAvailableCalendarsAsync();
+        }
+    }
+
+    private async Task LoadAvailableCalendarsAsync()
+    {
+        calendarsLoading = true;
+        calendarStatusMessage = string.Empty;
+        calendarIsError = false;
+        StateHasChanged();
+
+        var currentSelection = calendarSettings.CalendarId;
+        var result = await JS.InvokeAsync<GoogleCalendarListResult?>("biboCredentialsStorage.getGoogleCalendars");
+        availableCalendars = result?.Calendars ?? [];
+
+        if (!(result?.IsSuccess ?? false))
+        {
+            calendarStatusMessage = result?.ErrorMessage ?? "Kalenderliste konnte nicht geladen werden.";
+            calendarIsError = true;
+        }
+        else if (availableCalendars.Count == 0)
+        {
+            calendarStatusMessage = "Keine Kalender in deinem Google-Konto gefunden.";
+            calendarIsError = true;
+        }
+        else
+        {
+            calendarStatusMessage = $"{availableCalendars.Count} Kalender geladen.";
+            calendarIsError = false;
+
+            var hasCurrentSelection = !string.IsNullOrWhiteSpace(currentSelection)
+                && availableCalendars.Any(c => string.Equals(c.Id, currentSelection, StringComparison.Ordinal));
+
+            if (!hasCurrentSelection)
+            {
+                calendarSettings.CalendarId = availableCalendars.FirstOrDefault(c => c.IsPrimary)?.Id
+                    ?? availableCalendars[0].Id;
+            }
+        }
+
+        calendarsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task SaveGoogleCalendarSettingsAsync()
+    {
+        await JS.InvokeVoidAsync("biboCredentialsStorage.saveGoogleCalendarSettings", GoogleCalendarSettingsStorageKey, calendarSettings);
+        calendarStatusMessage = "Kalender-Einstellungen gespeichert.";
+        calendarIsError = false;
     }
 
     private async Task LoadFromBrowserAsync()

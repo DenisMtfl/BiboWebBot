@@ -69,9 +69,7 @@ public sealed class DailyLoanSyncHostedService(
                     Password = account.Password!
                 };
 
-                var result = settings.UsePlaywright
-                    ? await automationService.LoadLoansAsync(credentials, cancellationToken)
-                    : await automationService.LoadLoansWithoutPlaywrightAsync(credentials, cancellationToken);
+                var result = await automationService.LoadLoansAsync(credentials, cancellationToken);
 
                 if (!result.Success)
                 {
@@ -97,8 +95,10 @@ public sealed class DailyLoanSyncHostedService(
                 return;
             }
 
+            var eventSummaryTemplate = configuration["Google:EventSummaryTemplate"];
+
             var mqttOk = await mqttPublishService.PublishEarliestDueDateAsync(earliest.Value.DueDate, earliest.Value.AccountLabel, cancellationToken);
-            var googleOk = await googleCalendarService.CreateEarliestLoanEventByServiceAccountAsync(earliest.Value.DueDate, earliest.Value.AccountLabel, cancellationToken);
+            var googleOk = await googleCalendarService.CreateEarliestLoanEventByServiceAccountAsync(earliest.Value.DueDate, earliest.Value.AccountLabel, eventSummaryTemplate, cancellationToken);
 
             logger.LogInformation(
                 "DailySync: Frühestes Datum {DueDate} verarbeitet. MQTT={MqttOk}, Google={GoogleOk}",

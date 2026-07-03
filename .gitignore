@@ -18,6 +18,4 @@ obj/
 # Logs
 *.log
 
-# Playwright artifacts
-.playwright/
 /appsettings.json

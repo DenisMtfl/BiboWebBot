@@ -8,35 +8,31 @@
 
 <PageTitle>VÖBB Konto</PageTitle>
 
-<h1>VÖBB Ausleihen &amp; Verlängerung</h1>
-<p>Konten und Sammelauswahl verwaltest du im Menüpunkt <a href="/accounts">Konten Konfiguration</a>.</p>
+<section class="page-header mb-3">
+    <h1>VÖBB Ausleihen &amp; Verlängerung</h1>
+    <p class="text-muted mb-0">Konten und Sammelauswahl verwaltest du im Menüpunkt <a href="/accounts">Konten Konfiguration</a>.</p>
+</section>
 
-<div class="card border-0 shadow-sm mb-3">
-    <div class="card-body">
-        <div class="fw-semibold mb-2">Lademodus</div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" id="modePlaywright" name="loadMode" checked="@(selectedLoadMode == LoadMode.Playwright)" @onchange="() => selectedLoadMode = LoadMode.Playwright" />
-            <label class="form-check-label" for="modePlaywright">Mit Playwright</label>
+<div class="card mb-3">
+    <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div>
+            <div class="fw-semibold mb-2">Laden</div>
+            <div class="text-muted">Der Abruf läuft automatisch per HTTP ohne Browser-Automation.</div>
         </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" id="modeHttp" name="loadMode" checked="@(selectedLoadMode == LoadMode.WithoutPlaywright)" @onchange="() => selectedLoadMode = LoadMode.WithoutPlaywright" />
-            <label class="form-check-label" for="modeHttp">Ohne Playwright (HTTP)</label>
+        <div>
+            <button type="button" class="btn btn-primary" @onclick="LoadLoansForConfiguredAccountsAsync" disabled="@(isBusy || !hasConfiguredBatchAccounts)">
+                @if (isBusy)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Lade...</span>
+                }
+                else
+                {
+                    <span>Ausleihen für konfigurierte Konten laden</span>
+                }
+            </button>
         </div>
     </div>
-</div>
-
-<div class="d-flex gap-2 mb-4">
-    <button type="button" class="btn btn-primary" @onclick="LoadLoansForConfiguredAccountsAsync" disabled="@(isBusy || !hasConfiguredBatchAccounts)">
-        @if (isBusy)
-        {
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            <span>Lade...</span>
-        }
-        else
-        {
-            <span>Ausleihen fuer konfigurierte Konten laden</span>
-        }
-    </button>
 </div>
 
 @if (isBusy)
@@ -52,16 +48,16 @@
     <div class="alert @(isError ? "alert-danger" : "alert-info")">@statusMessage</div>
 }
 
-@if (playwrightStatusLogs.Count > 0)
+@if (loadStatusLogs.Count > 0)
 {
-    <div class="card border-0 shadow-sm mb-3">
+    <div class="card mb-3">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h2 class="h6 mb-0">Lade-Status</h2>
-                <span class="badge text-bg-secondary">@playwrightStatusLogs.Count Logs</span>
+                <span class="badge text-bg-secondary">@loadStatusLogs.Count Logs</span>
             </div>
             <div class="bg-light border rounded p-2" style="max-height: 260px; overflow-y: auto;">
-                @foreach (var entry in playwrightStatusLogs.AsEnumerable().Reverse())
+                @foreach (var entry in loadStatusLogs.AsEnumerable().Reverse())
                 {
                     <div class="small font-monospace text-break">@entry</div>
                 }
@@ -72,7 +68,7 @@
 
 @if (loans.Count > 0)
 {
-    <div class="card border-0 shadow-sm">
+    <div class="card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2 class="h5 mb-0">Ausleihen</h2>
@@ -114,12 +110,11 @@
 
     private List<VoebbLoanItem> loans = [];
     private string statusMessage = string.Empty;
-    private List<string> playwrightStatusLogs = [];
+    private List<string> loadStatusLogs = [];
     private bool isError;
     private bool isBusy;
     private bool browserConfigLoaded;
     private bool hasConfiguredBatchAccounts;
-    private LoadMode selectedLoadMode = LoadMode.Playwright;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -180,7 +175,7 @@
 
         isBusy = true;
         statusMessage = string.Empty;
-        playwrightStatusLogs = [];
+        loadStatusLogs = [];
         isError = false;
         StateHasChanged();
 
@@ -199,7 +194,7 @@
 
             if (result.Logs.Count > 0)
             {
-                playwrightStatusLogs.AddRange(result.Logs.Select(log => $"[{accountLabel}] {log}"));
+                loadStatusLogs.AddRange(result.Logs.Select(log => $"[{accountLabel}] {log}"));
                 StateHasChanged();
             }
         }
@@ -252,9 +247,7 @@
 
         for (var attempt = 1; attempt <= MaxLoadAttemptsPerAccount; attempt++)
         {
-            var result = selectedLoadMode == LoadMode.Playwright
-                ? await VoebbAutomationService.LoadLoansAsync(credentials)
-                : await VoebbAutomationService.LoadLoansWithoutPlaywrightAsync(credentials);
+            var result = await VoebbAutomationService.LoadLoansAsync(credentials);
 
             lastResult = result;
             if (result.Logs.Count > 0)
@@ -293,6 +286,8 @@
         => !string.IsNullOrWhiteSpace(message)
             && message.Contains("Zeitüberschreitung", StringComparison.OrdinalIgnoreCase);
 
+    private const string GoogleCalendarSettingsStorageKey = "bibo.googleCalendarSettings";
+
     private async Task<string> TrySyncEarliestDueDateToGoogleCalendarAsync()
     {
         var earliestLoan = GetEarliestDueDateLoan();
@@ -301,11 +296,15 @@
             return string.Empty;
         }
 
+        var calendarSettings = await JS.InvokeAsync<GoogleCalendarSettings?>("biboCredentialsStorage.loadGoogleCalendarSettings", GoogleCalendarSettingsStorageKey);
+
         var dueDateText = earliestLoan.Value.DueDate.ToString("dd.MM.yyyy", CultureInfo.GetCultureInfo("de-DE"));
         var synced = await JS.InvokeAsync<bool>(
             "biboCredentialsStorage.syncEarliestLoanToGoogleCalendar",
             dueDateText,
-            earliestLoan.Value.AccountLabel);
+            earliestLoan.Value.AccountLabel,
+            calendarSettings?.CalendarId,
+            calendarSettings?.EventSummaryTemplate);
 
         return synced
             ? $"Google-Kalender aktualisiert (frühestes Datum: {dueDateText})."
@@ -365,9 +364,9 @@
             return "Unbekannter Fehler.";
         }
 
-        if (message.Contains("Playwright-Browser fehlt", StringComparison.OrdinalIgnoreCase))
+        if (message.Contains("Browser fehlt", StringComparison.OrdinalIgnoreCase))
         {
-            return "Playwright-Browser fehlt.";
+            return "Browser fehlt.";
         }
 
         return message;
@@ -413,9 +412,4 @@
             .ToList();
     }
 
-    private enum LoadMode
-    {
-        Playwright,
-        WithoutPlaywright
     }
-}

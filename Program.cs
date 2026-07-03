@@ -24,11 +24,20 @@ builder.Services.AddAuthentication(options =>
         options.ClientId = builder.Configuration["Google:ClientId"] ?? string.Empty;
         options.ClientSecret = builder.Configuration["Google:ClientSecret"] ?? string.Empty;
         options.SaveTokens = true;
+        // "offline" + "consent" sorgen dafür, dass Google einen refresh_token ausstellt,
+        // damit der Access Token nach Ablauf (~1 Stunde) automatisch erneuert werden kann.
+        options.AccessType = "offline";
+        options.AdditionalAuthorizationParameters["prompt"] = "consent";
         options.Scope.Add("https://www.googleapis.com/auth/calendar.events");
+        // Zusätzlicher Lese-Scope wird benötigt, damit CalendarList.List() (Kalenderliste
+        // für das Dropdown) funktioniert - "calendar.events" allein reicht dafür nicht aus.
+        options.Scope.Add("https://www.googleapis.com/auth/calendar.readonly");
     });
 
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IVoebbAutomationService, VoebbAutomationService>();
 builder.Services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
 builder.Services.AddScoped<IMqttPublishService, MqttPublishService>();
@@ -69,6 +78,8 @@ app.MapGet("/api/google-calendar/sync-earliest", [Authorize] async (
     IGoogleCalendarService googleCalendarService,
     string dueDate,
     string? accountLabel,
+    string? calendarId,
+    string? eventName,
     CancellationToken cancellationToken) =>
 {
     var deCulture = CultureInfo.GetCultureInfo("de-DE");
@@ -77,8 +88,17 @@ app.MapGet("/api/google-calendar/sync-earliest", [Authorize] async (
         return Results.BadRequest("Ungültiges Datumsformat. Erwartet: dd.MM.yyyy");
     }
 
-    var created = await googleCalendarService.CreateEarliestLoanEventAsync(context, parsedDueDate, accountLabel, cancellationToken);
+    var created = await googleCalendarService.CreateEarliestLoanEventAsync(context, parsedDueDate, accountLabel, calendarId, eventName, cancellationToken);
     return created ? Results.Ok() : Results.Problem("Kalendereintrag konnte nicht erstellt werden.");
+});
+
+app.MapGet("/api/google-calendar/calendars", [Authorize] async (
+    HttpContext context,
+    IGoogleCalendarService googleCalendarService,
+    CancellationToken cancellationToken) =>
+{
+    var result = await googleCalendarService.GetAvailableCalendarsAsync(context, cancellationToken);
+    return Results.Ok(result);
 });
 
 app.MapStaticAssets();

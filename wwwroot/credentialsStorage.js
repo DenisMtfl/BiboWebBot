@@ -49,7 +49,7 @@ window.biboCredentialsStorage = {
     }
   },
 
-  syncEarliestLoanToGoogleCalendar: async function (dueDate, accountLabel) {
+  syncEarliestLoanToGoogleCalendar: async function (dueDate, accountLabel, calendarId, eventName) {
     if (!dueDate) {
       return false;
     }
@@ -58,6 +58,12 @@ window.biboCredentialsStorage = {
       const params = new URLSearchParams({ dueDate });
       if (accountLabel) {
         params.set("accountLabel", accountLabel);
+      }
+      if (calendarId) {
+        params.set("calendarId", calendarId);
+      }
+      if (eventName) {
+        params.set("eventName", eventName);
       }
 
       const response = await fetch(`/api/google-calendar/sync-earliest?${params.toString()}`, {
@@ -68,6 +74,45 @@ window.biboCredentialsStorage = {
       return response.ok;
     } catch {
       return false;
+    }
+  },
+
+  getGoogleCalendars: async function () {
+    try {
+      const response = await fetch("/api/google-calendar/calendars", {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (!response.ok) {
+        return { isSuccess: false, errorMessage: `Kalenderliste konnte nicht geladen werden (HTTP ${response.status}).`, calendars: [] };
+      }
+
+      const parsed = await response.json();
+      return {
+        isSuccess: parsed?.isSuccess ?? false,
+        errorMessage: parsed?.errorMessage ?? null,
+        calendars: Array.isArray(parsed?.calendars) ? parsed.calendars : []
+      };
+    } catch {
+      return { isSuccess: false, errorMessage: "Kalenderliste konnte nicht geladen werden (Netzwerkfehler).", calendars: [] };
+    }
+  },
+
+  saveGoogleCalendarSettings: function (key, settings) {
+    localStorage.setItem(key, JSON.stringify(settings ?? {}));
+  },
+
+  loadGoogleCalendarSettings: function (key) {
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
     }
   }
 };
