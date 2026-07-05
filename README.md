@@ -23,7 +23,7 @@ Inoffizielle Blazor-Server-WebApp zum Laden und Verwalten von VÖBB-Ausleihen ü
 - [Schnellstart](#schnellstart)
 - [Konfiguration](#konfiguration)
 - [Bedienung](#bedienung)
-- [Lademodi erklärt](#lademodi-erklärt)
+- [Abrufmodus](#abrufmodus)
 - [Google Kalender Integration](#google-kalender-integration)
 - [MQTT Integration](#mqtt-integration)
 - [DailySync (Hintergrundlauf)](#dailysync-hintergrundlauf)
@@ -56,7 +56,6 @@ Inoffizielle Blazor-Server-WebApp zum Laden und Verwalten von VÖBB-Ausleihen ü
 
 - .NET SDK 10 (`net10.0`)
 - Internetzugriff auf `voebb.de`
-- Für Playwright-Modus: installierte Browser-Binaries
 
 ## Schnellstart
 
@@ -67,22 +66,6 @@ dotnet run
 ```
 
 Danach die lokale URL aus dem Terminal öffnen (z. B. `https://localhost:xxxx`).
-
-### Playwright-Browser installieren
-
-Falls der Playwright-Modus meldet, dass Browser fehlen:
-
-```bash
-dotnet build
-pwsh bin/Debug/net10.0/playwright.ps1 install chromium
-```
-
-Alternative ohne `pwsh` (macOS ARM, mit mitgelieferter Node-Binary):
-
-```bash
-./bin/Debug/net10.0/.playwright/node/darwin-arm64/node \
-  ./bin/Debug/net10.0/.playwright/package/cli.js install chromium
-```
 
 ## Konfiguration
 
@@ -114,14 +97,7 @@ Optional:
 - Google anmelden (`/auth/google/login`) und frühestes Fälligkeitsdatum in gewählten Kalender schreiben
 - DailySync aktivieren für automatisches tägliches Laden + Kalender/MQTT Aktionen
 
-## Lademodi erklärt
-
-### Playwright
-
-- Simuliert Browser-Interaktion (robust bei dynamischen Flows)
-- Benötigt Browser-Binaries
-
-### HTTP-Fallback
+## Abrufmodus
 
 - Kein Browser erforderlich
 - Schneller/leichter, aber anfälliger bei HTML-/Flow-Änderungen
@@ -168,10 +144,6 @@ Steuerung über `DailySync` in der Konfiguration.
 ### „Keine konfigurierten Konten …“
 
 Mindestens ein Konto speichern und für Sammelladen markieren.
-
-### „Playwright-Browser fehlt“
-
-Playwright Browser installieren (siehe oben).
 
 ### „Login fehlgeschlagen“
 
