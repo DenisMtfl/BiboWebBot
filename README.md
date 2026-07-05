@@ -1,106 +1,226 @@
 # BiboWebBot
 
-BiboWebBot ist eine Blazor-Server-Anwendung, um VÖBB-Ausleihen für ein oder mehrere Konten zu laden und anzuzeigen.
+Inoffizielle Blazor-Server-WebApp zum Laden und Verwalten von VÖBB-Ausleihen über ein oder mehrere Konten.
 
-## Features
+> **Wichtig:** Kein offizielles VÖBB-Projekt. Änderungen an VÖBB-Seiten/Flows können die Funktion beeinflussen.
 
-- Konfigurationsseite für mehrere Konten
-- Laden mehrerer Konten mit sichtbaren Status-Logs
-- Ein HTTP-basierter Lademodus ohne Browser-Automation
-- Ausleihliste mit Konto-/Login-Name pro Zeile
-- Browser-Storage für gespeicherte Konten und Auswahl
-- Optionaler Google-Login und automatischer Kalendereintrag für das früheste Fälligkeitsdatum
-  - Kalender per Dropdown aus allen verfügbaren Google-Kalendern auswählbar
-  - Termin-Name frei konfigurierbar (Platzhalter `{Konto}` und `{Datum}`)
-- MQTT-Versand des frühesten Abgabedatums als Text
-  - Kann z. B. in Home Assistant als Sensor-/Statuswert weiterverwendet werden
-- Täglicher Hintergrundlauf (DailySync) für automatisches Laden + MQTT + Google-Kalender
+## Highlights
 
-## Tech Stack
+- Mehrere Konten verwalten und für Sammelladen markieren
+- Zwei Lademodi:
+  - **Playwright** (Browser-Automation)
+  - **HTTP-Fallback** (ohne Browser)
+- Robuste Parserlogik mit Tabellen- und Text-Fallback
+- Sichtbare Lade-/Diagnose-Logs pro Konto
+- Optional:
+  - Google-Login + Kalendereintrag für frühestes Fälligkeitsdatum
+  - MQTT-Publishing des frühesten Datums
+  - täglicher Hintergrund-Sync (DailySync)
 
-- .NET 10 (`net10.0`)
-- Blazor Server
-- QuickGrid (`Microsoft.AspNetCore.Components.QuickGrid`)
-- HTTP-basierte Scraping-/Login-Logik
-- Google Calendar API (`Google.Apis.Calendar.v3`)
-- Google Auth (`Microsoft.AspNetCore.Authentication.Google`)
-- MQTT (`MQTTnet`)
+## Inhaltsverzeichnis
 
-## Prerequisites
+- [Funktionsumfang](#funktionsumfang)
+- [Architektur](#architektur)
+- [Voraussetzungen](#voraussetzungen)
+- [Schnellstart](#schnellstart)
+- [Konfiguration](#konfiguration)
+- [Bedienung](#bedienung)
+- [Lademodi erklärt](#lademodi-erklärt)
+- [Google Kalender Integration](#google-kalender-integration)
+- [MQTT Integration](#mqtt-integration)
+- [DailySync (Hintergrundlauf)](#dailysync-hintergrundlauf)
+- [Sicherheit](#sicherheit)
+- [Fehlerbehebung](#fehlerbehebung)
+- [Entwicklung](#entwicklung)
+- [Projektstruktur](#projektstruktur)
+- [Haftungsausschluss](#haftungsausschluss)
 
-- .NET SDK 10 installiert
-- Keine Browser-Binaries erforderlich
+## Funktionsumfang
 
-## Getting Started
+- Konten in der UI speichern (Login-Name, Ausweisnummer, Passwort)
+- Mehrere Konten gesammelt laden
+- Ergebnisansicht mit Login-Name, Ausleihname und Fälligkeitsdatum
+- Retry bei Timeout-Szenarien
+- Parser-Tests über xUnit
 
-1. Wiederherstellen und bauen:
+## Architektur
+
+- **UI:** Blazor Server (`Components/Pages`)
+- **Domain-Modelle:** `Models/`
+- **Login/Navigation/Scraping:** `Services/VoebbAutomationService.cs`
+- **Parser:** `Services/VoebbLoanParser.cs`
+- **Kalender:** `Services/GoogleCalendarService.cs`
+- **MQTT:** `Services/MqttPublishService.cs`
+- **Daily Job:** `Services/DailyLoanSyncHostedService.cs`
+- **Client Storage:** `wwwroot/credentialsStorage.js` (Local Storage)
+
+## Voraussetzungen
+
+- .NET SDK 10 (`net10.0`)
+- Internetzugriff auf `voebb.de`
+- Für Playwright-Modus: installierte Browser-Binaries
+
+## Schnellstart
 
 ```bash
 dotnet restore
 dotnet build
-```
-
-2. Wiederherstellen und bauen:
-
-```bash
-dotnet restore
-dotnet build
-```
-
-3. Anwendung starten:
-
-```bash
 dotnet run
 ```
 
-4. Lokale URL aus dem Terminal aufrufen (meist `https://localhost:xxxx`).
+Danach die lokale URL aus dem Terminal öffnen (z. B. `https://localhost:xxxx`).
 
-## Konfiguration (appsettings)
+### Playwright-Browser installieren
 
-- `Voebb:Accounts`: Konten für Sammelladen (`LoginName`, `CardId`, `Password`, `LoadForBatch`)
-- `Google:ClientId` / `Google:ClientSecret`: für Google-Login in der UI
-- `Google:ServiceAccountJsonPath` / `Google:CalendarId`: für serverseitigen DailySync-Kalendereintrag
-- `Google:EventSummaryTemplate`: Termin-Name-Vorlage für DailySync (Platzhalter `{Konto}`, `{Datum}`)
-- `Mqtt:Enabled`, `Mqtt:Host`, `Mqtt:Port`, `Mqtt:Topic`, optional `Username`, `Password`, `UseTls`, `ClientId`
-- `DailySync:Enabled`, `DailySync:TimeOfDay` (z. B. `07:00`)
-
-## Usage
-
-1. In der App die Seite Konten Konfiguration öffnen.
-2. Ein oder mehrere VÖBB-Konten hinzufügen:
-   - Login-Name (Anzeige in der UI)
-   - Card ID
-   - Passwort
-3. Konten speichern und zur Sammelauswahl markieren.
-4. Auf der Startseite den Modus wählen:
-   - Laden starten und Status/Logs beobachten
-5. Laden starten und Status/Logs beobachten.
-6. Optional: per Navigation `Google Login` anmelden, damit das früheste Datum direkt in den Google-Kalender geschrieben werden kann. Auf der Seite Konten Konfiguration kann anschließend per Dropdown der Ziel-Kalender ausgewählt und der Termin-Name angepasst werden.
-7. Optional: DailySync in `appsettings.json` aktivieren für tägliche automatische Prüfung.
-
-## Security Notes
-
-- Zugangsdaten werden zur Komfortnutzung im Browser-Storage gespeichert.
-- Alternativ können Konten zentral in `appsettings*.json` unter `Voebb:Accounts` gepflegt werden (`LoginName`, `CardId`, `Password`, optional `LoadForBatch`).
-- MQTT/Google-Zugangsdaten nie in ein öffentliches Repository committen.
-- Nur auf vertrauenswürdigen Geräten verwenden.
-- Exportierte Browser-Profile nicht weitergeben.
-
-## Project Structure
-
-- `Components/Pages/Home.razor`: Laden der Ausleihen und Ergebnistabelle
-- `Components/Pages/Accounts.razor`: Konten-Konfiguration
-- `Services/VoebbAutomationService.cs`: Login-, Navigation- und Scraping-Logik ohne Browser-Automation
-- `Services/DailyLoanSyncHostedService.cs`: täglicher Hintergrundlauf für automatische Synchronisation
-- `Services/GoogleCalendarService.cs`: Google-Kalender-Synchronisation
-- `Services/MqttPublishService.cs`: MQTT-Publishing
-- `Models/`: Datenmodelle fuer Konten, Ausleihen und Ergebnisobjekte
-- `wwwroot/credentialsStorage.js`: Browser-Storage-Helfer
-
-## Build Status
-
-Das Projekt baut aktuell erfolgreich mit:
+Falls der Playwright-Modus meldet, dass Browser fehlen:
 
 ```bash
 dotnet build
+pwsh bin/Debug/net10.0/playwright.ps1 install chromium
 ```
+
+Alternative ohne `pwsh` (macOS ARM, mit mitgelieferter Node-Binary):
+
+```bash
+./bin/Debug/net10.0/.playwright/node/darwin-arm64/node \
+  ./bin/Debug/net10.0/.playwright/package/cli.js install chromium
+```
+
+## Konfiguration
+
+### `appsettings.json`
+
+Relevante Bereiche:
+
+- `Voebb:Accounts`: serverseitig vorkonfigurierte Konten (optional)
+- `Google:ClientId`, `Google:ClientSecret`: OAuth für UI-Login
+- `Google:ServiceAccountJsonPath`, `Google:CalendarId`: serverseitiger DailySync-Kalendereintrag
+- `Google:EventSummaryTemplate`: z. B. `VÖBB fällig: {Konto} am {Datum}`
+- `Mqtt:Enabled`, `Mqtt:Host`, `Mqtt:Port`, `Mqtt:Topic`, optional `Username`, `Password`, `UseTls`, `ClientId`
+- `DailySync:Enabled`, `DailySync:TimeOfDay`
+
+## Bedienung
+
+1. Seite **Konten Konfiguration** öffnen (`/accounts`)
+2. Für jedes Konto eingeben:
+   - Login-Name
+   - Bibliotheksausweis
+   - Passwort
+3. Konto speichern und für Sammelladen markieren
+4. Zur Startseite (`/`) gehen
+5. Lademodus wählen und Ausleihen laden
+6. Ergebnisliste und Logs prüfen
+
+Optional:
+
+- Google anmelden (`/auth/google/login`) und frühestes Fälligkeitsdatum in gewählten Kalender schreiben
+- DailySync aktivieren für automatisches tägliches Laden + Kalender/MQTT Aktionen
+
+## Lademodi erklärt
+
+### Playwright
+
+- Simuliert Browser-Interaktion (robust bei dynamischen Flows)
+- Benötigt Browser-Binaries
+
+### HTTP-Fallback
+
+- Kein Browser erforderlich
+- Schneller/leichter, aber anfälliger bei HTML-/Flow-Änderungen
+- Nutzt zusätzliche Fallback-Navigation und Text-Parsing
+
+## Google Kalender Integration
+
+Die App unterstützt:
+
+- Google OAuth Login
+- Abruf verfügbarer Kalender (`/api/google-calendar/calendars`)
+- Erstellen eines Kalendereintrags für frühestes Fälligkeitsdatum (`/api/google-calendar/sync-earliest`)
+
+Scopes:
+
+- `https://www.googleapis.com/auth/calendar.events`
+- `https://www.googleapis.com/auth/calendar.readonly`
+
+## MQTT Integration
+
+Wenn aktiviert, publiziert die App das früheste Fälligkeitsdatum auf das konfigurierte Topic.  
+Gedacht für Home Assistant / Automations-Workflows.
+
+## DailySync (Hintergrundlauf)
+
+`DailyLoanSyncHostedService` kann täglich automatisch:
+
+1. Ausleihen laden
+2. Frühestes Datum ermitteln
+3. MQTT publizieren
+4. Kalendereintrag erstellen
+
+Steuerung über `DailySync` in der Konfiguration.
+
+## Sicherheit
+
+- Kontodaten werden in der UI im **Browser Local Storage** gespeichert.
+- Sensible Daten (Google Secrets, MQTT-Credentials) **nicht** ins öffentliche Repo committen.
+- App nur auf vertrauenswürdigen Geräten nutzen.
+- Auf geteilten Geräten gespeicherte Konten nach Nutzung löschen.
+
+## Fehlerbehebung
+
+### „Keine konfigurierten Konten …“
+
+Mindestens ein Konto speichern und für Sammelladen markieren.
+
+### „Playwright-Browser fehlt“
+
+Playwright Browser installieren (siehe oben).
+
+### „Login fehlgeschlagen“
+
+Ausweisnummer/Passwort prüfen; ggf. Login direkt auf VÖBB testen.
+
+### „Zeitüberschreitung bei der Kommunikation“
+
+Neu versuchen; alternativ den HTTP-Modus testen.
+
+## Entwicklung
+
+### Build
+
+```bash
+dotnet build BiboWebBot.sln
+```
+
+### Tests
+
+```bash
+dotnet test BiboWebBot.sln
+```
+
+## Projektstruktur
+
+```text
+BiboWebBot/
+├─ Components/
+│  └─ Pages/
+│     ├─ Home.razor
+│     ├─ Accounts.razor
+│     └─ About.razor
+├─ Models/
+├─ Services/
+│  ├─ VoebbAutomationService.cs
+│  ├─ VoebbLoanParser.cs
+│  ├─ GoogleCalendarService.cs
+│  ├─ MqttPublishService.cs
+│  └─ DailyLoanSyncHostedService.cs
+├─ wwwroot/
+│  └─ credentialsStorage.js
+├─ BiboWebBot.Tests/
+├─ BiboWebBot.csproj
+└─ BiboWebBot.sln
+```
+
+## Haftungsausschluss
+
+Dieses Projekt wird ohne Gewähr bereitgestellt.  
+Kompatibilität mit VÖBB kann sich durch externe Änderungen jederzeit ändern.
