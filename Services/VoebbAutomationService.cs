@@ -118,7 +118,7 @@ public sealed class VoebbAutomationService(ILogger<VoebbAutomationService> logge
                 return new VoebbOperationResult
                 {
                     Success = false,
-                    Message = "Loginformular konnte ohne Browser-Automation nicht gefunden werden.",
+                    Message = "Loginformular konnte nicht gefunden werden.",
                     Logs = logs
                 };
             }

@@ -1,13 +1,13 @@
 # BiboWebBot
 
-Inoffizielle Blazor-Server-WebApp zum HTTP-basierten Laden und Verwalten von VÖBB-Ausleihen über ein oder mehrere Konten.
+Inoffizielle Blazor-Server-WebApp zum Laden und Verwalten von VÖBB-Ausleihen über ein oder mehrere Konten.
 
 > **Wichtig:** Kein offizielles VÖBB-Projekt. Änderungen an VÖBB-Seiten/Flows können die Funktion beeinflussen.
 
 ## Highlights
 
 - Mehrere Konten verwalten und für Sammelladen markieren
-- HTTP-basierter Lademodus ohne Playwright
+- Automatischer Lademodus
 - Robuste Parserlogik mit Tabellen- und Text-Fallback
 - Sichtbare Lade-/Diagnose-Logs pro Konto
 - Optional:
