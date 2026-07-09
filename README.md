@@ -1,196 +1,145 @@
 # BiboWebBot
 
-Inoffizielle Blazor-Server-WebApp zum Laden und Verwalten von VÖBB-Ausleihen über ein oder mehrere Konten.
+BiboWebBot ist eine .NET-10-Lösung zum Abrufen und Auswerten von VÖBB-Ausleihen. Die Lösung kombiniert eine Blazor-Server-Webanwendung für die interaktive Nutzung mit einer Console-Anwendung für lokale oder automatisierte Batch-Läufe.
 
-> **Wichtig:** Kein offizielles VÖBB-Projekt. Änderungen an VÖBB-Seiten/Flows können die Funktion beeinflussen.
+## Überblick
 
-## Highlights
+Mit BiboWebBot lassen sich mehrere VÖBB-Konten zentral verwalten und in einem Durchlauf laden. Das früheste Rückgabedatum kann anschließend optional an Google Kalender und MQTT übertragen werden.
 
-- Mehrere Konten verwalten und für Sammelladen markieren
-- Automatischer Lademodus
-- Robuste Parserlogik mit Tabellen- und Text-Fallback
-- Sichtbare Lade-/Diagnose-Logs pro Konto
-- Optional:
-  - Google-Login + Kalendereintrag für frühestes Fälligkeitsdatum
-  - MQTT-Publishing des frühesten Datums
-  - täglicher Hintergrund-Sync (DailySync)
+## Hauptfunktionen
 
-## Inhaltsverzeichnis
+- Laden von Ausleihen für mehrere VÖBB-Konten
+- HTTP-basierter Abruf ohne Browser-Automation
+- Anzeige von Status- und Fehlerlogs in der Weboberfläche
+- Verwaltung von Konten in der Blazor-App mit Speicherung im Browser
+- Unterstützung zusätzlicher Konten aus `appsettings*.json`
+- Optionaler Google-Login in der Web-App
+  - Auswahl des Zielkalenders
+  - frei konfigurierbarer Terminname mit `{Konto}` und `{Datum}`
+  - Übertragung des frühesten Rückgabedatums nach manuellem Laden
+- Optionaler MQTT-Versand des frühesten Rückgabedatums
+- Optionaler täglicher Hintergrundlauf (`DailySync`) in der Web-App für Laden und MQTT
+- Optionale Console-Ausführung für Batch-Läufe mit MQTT und Google-Kalender-Eintrag
 
-- [Funktionsumfang](#funktionsumfang)
-- [Architektur](#architektur)
-- [Voraussetzungen](#voraussetzungen)
-- [Schnellstart](#schnellstart)
-- [Konfiguration](#konfiguration)
-- [Bedienung](#bedienung)
-- [Abrufmodus](#abrufmodus)
-- [Google Kalender Integration](#google-kalender-integration)
-- [MQTT Integration](#mqtt-integration)
-- [DailySync (Hintergrundlauf)](#dailysync-hintergrundlauf)
-- [Sicherheit](#sicherheit)
-- [Fehlerbehebung](#fehlerbehebung)
-- [Entwicklung](#entwicklung)
-- [Projektstruktur](#projektstruktur)
-- [Haftungsausschluss](#haftungsausschluss)
+## Lösungsstruktur
 
-## Funktionsumfang
-
-- Konten in der UI speichern (Login-Name, Ausweisnummer, Passwort)
-- Mehrere Konten gesammelt laden
-- Ergebnisansicht mit Login-Name, Ausleihname und Fälligkeitsdatum
-- Retry bei Timeout-Szenarien
-- Parser-Tests über xUnit
-
-## Architektur
-
-- **UI:** Blazor Server (`Components/Pages`)
-- **Domain-Modelle:** `Models/`
-- **Login/Navigation/Scraping:** `Services/VoebbAutomationService.cs`
-- **Parser:** `Services/VoebbLoanParser.cs`
-- **Kalender:** `Services/GoogleCalendarService.cs`
-- **MQTT:** `Services/MqttPublishService.cs`
-- **Daily Job:** `Services/DailyLoanSyncHostedService.cs`
-- **Client Storage:** `wwwroot/credentialsStorage.js` (Local Storage)
+- `Projekt/BiboWebBot` – Blazor-Server-Webanwendung
+- `Projekt/BiboWebBot.Console` – Console-Anwendung für lokale und automatisierte Läufe
+- `Projekt/BiboWebBot.VoebbParsing` – HTTP-basierte VÖBB-Login- und Parsing-Logik
+- `Projekt/BiboWebBot.GoogleCalendar` – Google-Kalender-Integration
+- `Projekt/BiboWebBot.Mqtt` – MQTT-Publishing
+- `Projekt/BiboWebBot.Tests` – Tests
 
 ## Voraussetzungen
 
-- .NET SDK 10 (`net10.0`)
-- Internetzugriff auf `voebb.de`
+- .NET SDK 10
+- optional: Google-OAuth-Client für Kalenderfunktionen
+- optional: MQTT-Broker für MQTT-Ausgaben
 
 ## Schnellstart
+
+### Lösung wiederherstellen und bauen
 
 ```bash
 dotnet restore
 dotnet build
-dotnet run
 ```
 
-Danach die lokale URL aus dem Terminal öffnen (z. B. `https://localhost:xxxx`).
+### Webanwendung starten
+
+```bash
+dotnet run --project Projekt/BiboWebBot/BiboWebBot.csproj
+```
+
+Anschließend die im Terminal ausgegebene URL im Browser öffnen.
+
+### Console-Anwendung starten
+
+```bash
+dotnet run --project Projekt/BiboWebBot.Console/BiboWebBot.Console.csproj
+```
 
 ## Konfiguration
 
-### `appsettings.json`
+Die relevanten Einstellungen liegen in den lokalen `appsettings.json`-Dateien der jeweiligen Projekte. Als Vorlage sind versionierte `appsettings.example.json`-Dateien enthalten; diese sollten lokal nach `appsettings.json` kopiert und dort mit echten Werten befuellt werden.
 
-Relevante Bereiche:
+### VÖBB-Konten
 
-- `Voebb:Accounts`: serverseitig vorkonfigurierte Konten (optional)
-- `Google:ClientId`, `Google:ClientSecret`: OAuth für UI-Login
-- `Google:ServiceAccountJsonPath`, `Google:CalendarId`: serverseitiger DailySync-Kalendereintrag
-- `Google:EventSummaryTemplate`: z. B. `VÖBB fällig: {Konto} am {Datum}`
-- `Mqtt:Enabled`, `Mqtt:Host`, `Mqtt:Port`, `Mqtt:Topic`, optional `Username`, `Password`, `UseTls`, `ClientId`
-- `DailySync:Enabled`, `DailySync:TimeOfDay`
+```json
+"Voebb": {
+  "Accounts": [
+    {
+      "LoginName": "Name",
+      "CardId": "Ausweisnummer",
+      "Password": "Passwort",
+      "LoadForBatch": true
+    }
+  ]
+}
+```
 
-## Bedienung
+Bedeutung der Felder:
 
-1. Seite **Konten Konfiguration** öffnen (`/accounts`)
-2. Für jedes Konto eingeben:
-   - Login-Name
-   - Bibliotheksausweis
-   - Passwort
-3. Konto speichern und für Sammelladen markieren
-4. Zur Startseite (`/`) gehen
-5. Lademodus wählen und Ausleihen laden
-6. Ergebnisliste und Logs prüfen
+- `LoginName` – Anzeigename in UI, Logs und Ausgaben
+- `CardId` – Bibliotheksausweisnummer
+- `Password` – VÖBB-Passwort
+- `LoadForBatch` – aktiviert das Konto für Sammelläufe
 
-Optional:
+### Web-App (`Projekt/BiboWebBot/appsettings.json`)
 
-- Google anmelden (`/auth/google/login`) und frühestes Fälligkeitsdatum in gewählten Kalender schreiben
-- DailySync aktivieren für automatisches tägliches Laden + Kalender/MQTT Aktionen
+Ausgangspunkt: `Projekt/BiboWebBot/appsettings.example.json`
 
-## Abrufmodus
+- `Google:ClientId` / `Google:ClientSecret` – Google-Login für die Web-App
+- `Google:CalendarId` – Standard-Zielkalender
+- `Google:EventSummaryTemplate` – Titelvorlage für Kalendereinträge
+- `Mqtt:*` – MQTT-Konfiguration
+- `DailySync:Enabled` – aktiviert den täglichen Hintergrundlauf
+- `DailySync:TimeOfDay` – Uhrzeit im Format `HH:mm`
 
-- Kein Browser erforderlich
-- Schneller/leichter, aber anfälliger bei HTML-/Flow-Änderungen
-- Nutzt zusätzliche Fallback-Navigation und Text-Parsing
+Hinweis: Der aktuelle `DailySync` der Web-App veröffentlicht das früheste Rückgabedatum per MQTT. Ein automatischer Google-Kalender-Eintrag wird dort derzeit nicht ausgeführt.
 
-## Google Kalender Integration
+### Console-App (`Projekt/BiboWebBot.Console/appsettings.json`)
 
-Die App unterstützt:
+Ausgangspunkt: `Projekt/BiboWebBot.Console/appsettings.example.json`
 
-- Google OAuth Login
-- Abruf verfügbarer Kalender (`/api/google-calendar/calendars`)
-- Erstellen eines Kalendereintrags für frühestes Fälligkeitsdatum (`/api/google-calendar/sync-earliest`)
+- `Google:Enabled` – aktiviert die Google-Kalender-Synchronisation
+- `Google:ClientId` / `Google:ClientSecret` – OAuth-Client für die Console-App
+- `Google:TokenStorePath` – lokaler Speicherort für OAuth-Tokens
+- `Google:RedirectUri` – Redirect-URI für den lokalen OAuth-Flow
+- `Google:CalendarId` – Zielkalender
+- `Google:EventSummaryTemplate` – Titelvorlage für Kalendereinträge
+- `Mqtt:*` – MQTT-Konfiguration
 
-Scopes:
+## Typische Nutzung der Web-App
 
-- `https://www.googleapis.com/auth/calendar.events`
-- `https://www.googleapis.com/auth/calendar.readonly`
+1. `/accounts` öffnen.
+2. VÖBB-Konten anlegen oder Konten aus `appsettings*.json` verwenden.
+3. Gewünschte Konten für Sammelläufe markieren.
+4. Optional per Google anmelden und den Zielkalender auswählen.
+5. Auf der Startseite die Ausleihen für konfigurierte Konten laden.
+6. Das früheste Rückgabedatum optional an Google Kalender und/oder MQTT übertragen.
 
-## MQTT Integration
+## Betriebsmodi
 
-Wenn aktiviert, publiziert die App das früheste Fälligkeitsdatum auf das konfigurierte Topic.  
-Gedacht für Home Assistant / Automations-Workflows.
+### Interaktiv über Blazor
 
-## DailySync (Hintergrundlauf)
+Geeignet für die manuelle Nutzung im Browser mit sichtbaren Ladeprotokollen, Kontenverwaltung und Google-Kalender-Auswahl.
 
-`DailyLoanSyncHostedService` kann täglich automatisch:
+### Automatisiert über Console
 
-1. Ausleihen laden
-2. Frühestes Datum ermitteln
-3. MQTT publizieren
-4. Kalendereintrag erstellen
-
-Steuerung über `DailySync` in der Konfiguration.
+Geeignet für lokale Tasks, Scheduler oder andere Automatisierungen, wenn Ausleihen ohne Browseroberfläche geladen und weiterverarbeitet werden sollen.
 
 ## Sicherheit
 
-- Kontodaten werden in der UI im **Browser Local Storage** gespeichert.
-- Sensible Daten (Google Secrets, MQTT-Credentials) **nicht** ins öffentliche Repo committen.
-- App nur auf vertrauenswürdigen Geräten nutzen.
-- Auf geteilten Geräten gespeicherte Konten nach Nutzung löschen.
+- Zugangsdaten im Browser-Storage nur auf vertrauenswürdigen Geräten verwenden.
+- Keine echten Zugangsdaten, MQTT-Passwörter oder Google-Secrets in ein öffentliches Repository committen.
+- Echte Werte nur in lokalen, nicht versionierten `appsettings.json`-Dateien pflegen; im Repository bleiben ausschließlich die `appsettings.example.json`-Vorlagen.
 
-## Fehlerbehebung
+## Relevante Dateien
 
-### „Keine konfigurierten Konten …“
-
-Mindestens ein Konto speichern und für Sammelladen markieren.
-
-### „Login fehlgeschlagen“
-
-Ausweisnummer/Passwort prüfen; ggf. Login direkt auf VÖBB testen.
-
-### „Zeitüberschreitung bei der Kommunikation“
-
-Neu versuchen; alternativ den HTTP-Modus testen.
-
-## Entwicklung
-
-### Build
-
-```bash
-dotnet build BiboWebBot.sln
-```
-
-### Tests
-
-```bash
-dotnet test BiboWebBot.sln
-```
-
-## Projektstruktur
-
-```text
-BiboWebBot/
-├─ Components/
-│  └─ Pages/
-│     ├─ Home.razor
-│     ├─ Accounts.razor
-│     └─ About.razor
-├─ Models/
-├─ Services/
-│  ├─ VoebbAutomationService.cs
-│  ├─ VoebbLoanParser.cs
-│  ├─ GoogleCalendarService.cs
-│  ├─ MqttPublishService.cs
-│  └─ DailyLoanSyncHostedService.cs
-├─ wwwroot/
-│  └─ credentialsStorage.js
-├─ BiboWebBot.Tests/
-├─ BiboWebBot.csproj
-└─ BiboWebBot.sln
-```
-
-## Haftungsausschluss
-
-Dieses Projekt wird ohne Gewähr bereitgestellt.  
-Kompatibilität mit VÖBB kann sich durch externe Änderungen jederzeit ändern.
+- `Projekt/BiboWebBot/Components/Pages/Home.razor` – Laden der Ausleihen und Statusanzeige
+- `Projekt/BiboWebBot/Components/Pages/Accounts.razor` – Konten- und Kalenderkonfiguration
+- `Projekt/BiboWebBot/Services/DailyLoanSyncHostedService.cs` – täglicher Hintergrundlauf
+- `Projekt/BiboWebBot.VoebbParsing/VoebbAutomationService.cs` – HTTP-Login und Parsing
+- `Projekt/BiboWebBot.GoogleCalendar/GoogleCalendarService.cs` – Google-Kalender-Funktionen
+- `Projekt/BiboWebBot.Mqtt/MqttPublishService.cs` – MQTT-Versand

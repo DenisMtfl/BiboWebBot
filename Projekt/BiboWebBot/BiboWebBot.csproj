@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="BiboWebBot.Tests/**/*.cs" />
+    <Content Remove="BiboWebBot.Tests/**/*.cs" />
+    <None Remove="BiboWebBot.Tests/**/*.cs" />
+
+    <Compile Remove="BiboWebBot.Mqtt/**/*.cs" />
+    <Content Remove="BiboWebBot.Mqtt/**/*.cs" />
+    <None Remove="BiboWebBot.Mqtt/**/*.cs" />
+
+    <Compile Remove="BiboWebBot.GoogleCalendar/**/*.cs" />
+    <Content Remove="BiboWebBot.GoogleCalendar/**/*.cs" />
+    <None Remove="BiboWebBot.GoogleCalendar/**/*.cs" />
+
+    <Compile Remove="BiboWebBot.VoebbParsing/**/*.cs" />
+    <Content Remove="BiboWebBot.VoebbParsing/**/*.cs" />
+    <None Remove="BiboWebBot.VoebbParsing/**/*.cs" />
+
+    <Compile Remove="BiboWebBot.Console/**/*.cs" />
+    <Content Remove="BiboWebBot.Console/**/*.cs" />
+    <None Remove="BiboWebBot.Console/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BiboWebBot.GoogleCalendar\BiboWebBot.GoogleCalendar.csproj" />
+    <ProjectReference Include="..\BiboWebBot.Mqtt\BiboWebBot.Mqtt.csproj" />
+    <ProjectReference Include="..\BiboWebBot.VoebbParsing\BiboWebBot.VoebbParsing.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,4 +1,4 @@
-# Build output
+﻿# Build output
 bin/
 obj/
 
@@ -18,4 +18,6 @@ obj/
 # Logs
 *.log
 
-/appsettings.json
+/Projekt/BiboWebBot/appsettings.json
+/Projekt/BiboWebBot.Console/appsettings.json
+/Projekt/BiboWebBot.Console/google-oauth-tokens/
