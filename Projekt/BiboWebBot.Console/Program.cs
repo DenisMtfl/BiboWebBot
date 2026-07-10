@@ -1,5 +1,4 @@
 using System.Globalization;
-using BiboWebBot.GoogleCalendar;
 using BiboWebBot.Mqtt;
 using BiboWebBot.VoebbParsing;
 using Microsoft.Extensions.Configuration;
@@ -25,16 +24,12 @@ try
     var services = new ServiceCollection();
     services.AddSingleton<IConfiguration>(configuration);
     services.AddLogging(logging => logging.AddSerilog(Log.Logger, dispose: false));
-    services.AddHttpClient();
-    services.AddMemoryCache();
     services.AddTransient<IVoebbAutomationService, VoebbAutomationService>();
     services.AddTransient<IMqttPublishService, MqttPublishService>();
-    services.AddTransient<IGoogleCalendarService, GoogleCalendarService>();
 
     using var serviceProvider = services.BuildServiceProvider();
     var voebbAutomationService = serviceProvider.GetRequiredService<IVoebbAutomationService>();
     var mqttService = serviceProvider.GetRequiredService<IMqttPublishService>();
-    var googleCalendarService = serviceProvider.GetRequiredService<IGoogleCalendarService>();
 
     var configuredAccounts = LoadConfiguredAccounts(configuration);
     if (configuredAccounts.Count == 0)
@@ -128,23 +123,6 @@ try
 
     var mqttSent = await mqttService.PublishEarliestDueDateAsync(earliest.DueDate!.Value, earliest.AccountLabel);
     Log.Information(mqttSent ? "MQTT gesendet." : "MQTT nicht gesendet (Konfiguration/Fehler).");
-
-    var googleEnabled = configuration.GetValue<bool?>("Google:Enabled") ?? false;
-    if (googleEnabled)
-    {
-        var googleSent = await googleCalendarService.CreateEarliestLoanEventByConsoleLoginAsync(
-            earliest.DueDate.Value,
-            earliest.AccountLabel,
-            configuration["Google:EventSummaryTemplate"]);
-
-        Log.Information(googleSent
-            ? "Google-Kalender Termin erstellt."
-            : "Google-Kalender Termin nicht erstellt.");
-    }
-    else
-    {
-        Log.Information("Google-Kalender ist deaktiviert (Google:Enabled=false).");
-    }
 }
 catch (Exception ex)
 {

@@ -2,11 +2,10 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 
 namespace BiboWebBot.VoebbParsing;
 
-public sealed class VoebbAutomationService(ILogger<VoebbAutomationService> logger) : IVoebbAutomationService
+public sealed class VoebbAutomationService : IVoebbAutomationService
 {
     private const string StartUrl = "https://www.voebb.de/aDISWeb/app/prod00";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -130,7 +129,8 @@ public sealed class VoebbAutomationService(ILogger<VoebbAutomationService> logge
             formValues["LPASSW"] = credentials.Password;
             formValues["LLOGIN"] = "Anmelden";
 
-            using (var response = await client.PostAsync(formAction, new FormUrlEncodedContent(formValues), cts.Token))
+            using (var requestContent = new FormUrlEncodedContent(formValues))
+            using (var response = await client.PostAsync(formAction, requestContent, cts.Token))
             {
                 response.EnsureSuccessStatusCode();
                 currentUri = response.RequestMessage?.RequestUri ?? formAction;
@@ -455,14 +455,16 @@ public sealed class VoebbAutomationService(ILogger<VoebbAutomationService> logge
 
         if (method == HttpMethod.Get)
         {
-            var query = await new FormUrlEncodedContent(submitValues).ReadAsStringAsync(token);
+            using var queryContent = new FormUrlEncodedContent(submitValues);
+            var query = await queryContent.ReadAsStringAsync(token);
             var separator = actionUri.Query.Length == 0 ? "?" : "&";
             var requestUri = new Uri(actionUri + separator + query, UriKind.Absolute);
             var html = await client.GetStringAsync(requestUri, token);
             return (requestUri, html);
         }
 
-        using var response = await client.PostAsync(actionUri, new FormUrlEncodedContent(submitValues), token);
+        using var requestContent = new FormUrlEncodedContent(submitValues);
+        using var response = await client.PostAsync(actionUri, requestContent, token);
         response.EnsureSuccessStatusCode();
         var finalUri = response.RequestMessage?.RequestUri ?? actionUri;
         var content = await response.Content.ReadAsStringAsync(token);

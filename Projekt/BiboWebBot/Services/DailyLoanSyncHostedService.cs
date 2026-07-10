@@ -1,5 +1,4 @@
 using System.Globalization;
-using BiboWebBot.GoogleCalendar;
 using BiboWebBot.Models;
 using BiboWebBot.Mqtt;
 using BiboWebBot.VoebbParsing;
@@ -30,8 +29,6 @@ public sealed class DailyLoanSyncHostedService(
             }
 
             await RunSyncAsync(settings, stoppingToken);
-
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
 
@@ -39,10 +36,9 @@ public sealed class DailyLoanSyncHostedService(
     {
         try
         {
-            using var scope = serviceProvider.CreateScope();
+            await using var scope = serviceProvider.CreateAsyncScope();
             var automationService = scope.ServiceProvider.GetRequiredService<BiboWebBot.VoebbParsing.IVoebbAutomationService>();
             var mqttPublishService = scope.ServiceProvider.GetRequiredService<IMqttPublishService>();
-            var googleCalendarService = scope.ServiceProvider.GetRequiredService<IGoogleCalendarService>();
 
             var configuredAccounts = configuration
                 .GetSection("Voebb:Accounts")
@@ -98,8 +94,6 @@ public sealed class DailyLoanSyncHostedService(
                 return;
             }
 
-            var eventSummaryTemplate = configuration["Google:EventSummaryTemplate"];
-
             var mqttOk = await mqttPublishService.PublishEarliestDueDateAsync(earliest.Value.DueDate, earliest.Value.AccountLabel, cancellationToken);
 
             logger.LogInformation(
@@ -131,23 +125,19 @@ public sealed class DailyLoanSyncHostedService(
     private static (DateOnly DueDate, string? AccountLabel)? GetEarliestLoan(IReadOnlyList<VoebbLoanItem> loans)
     {
         var deCulture = CultureInfo.GetCultureInfo("de-DE");
-        var earliest = loans
-            .Select(loan => new
-            {
-                loan.AccountCardId,
-                Parsed = DateOnly.TryParseExact(loan.DueDate, "dd.MM.yyyy", deCulture, DateTimeStyles.None, out var dueDate)
-                    ? dueDate
-                    : (DateOnly?)null
-            })
-            .Where(x => x.Parsed.HasValue)
-            .OrderBy(x => x.Parsed!.Value)
-            .FirstOrDefault();
+        (DateOnly DueDate, string? AccountLabel)? earliest = null;
 
-        if (earliest?.Parsed is null)
+        foreach (var loan in loans)
         {
-            return null;
+            if (!DateOnly.TryParseExact(loan.DueDate, "dd.MM.yyyy", deCulture, DateTimeStyles.None, out var dueDate)
+                || (earliest is not null && dueDate >= earliest.Value.DueDate))
+            {
+                continue;
+            }
+
+            earliest = (dueDate, loan.AccountCardId);
         }
 
-        return (earliest.Parsed.Value, earliest.AccountCardId);
+        return earliest;
     }
 }

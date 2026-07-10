@@ -65,4 +65,23 @@ public class VoebbLoanParserTests
 
         Assert.Single(loans);
     }
+
+    [Fact]
+    public void ParseLoansFromTextFallback_IgnoresScriptContent()
+    {
+        var html = """
+        <script>const sample = 'Fällig am 01.01.2026';</script>
+        <div>
+          <p>Fällig am 04.09.2026</p>
+          <p>Der echte Titel</p>
+          <p>Bibliothek am Wasserturm</p>
+        </div>
+        """;
+
+        var loans = VoebbLoanParser.ParseLoansFromTextFallback(html);
+
+        var loan = Assert.Single(loans);
+        Assert.Equal("04.09.2026", loan.DueDate);
+        Assert.Equal("Der echte Titel", loan.LoanName);
+    }
 }

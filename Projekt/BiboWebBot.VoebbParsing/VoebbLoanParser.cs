@@ -5,14 +5,30 @@ namespace BiboWebBot.VoebbParsing;
 
 public static class VoebbLoanParser
 {
+    private static readonly Regex HtmlLineBreakRegex = new("<br\\s*/?>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex HtmlTagRegex = new("<.*?>", RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex InlineWhitespaceRegex = new("[ \\t\\r\\f\\v]+", RegexOptions.Compiled);
+    private static readonly Regex BracketedLineRegex = new("^\\[.*\\]$", RegexOptions.Compiled);
+    private static readonly Regex NumericIdentifierRegex = new("^\\d{6,}$", RegexOptions.Compiled);
+    private static readonly Regex LoanMetadataRegex = new("sprecher|autor|regie|bibliothek|fällig|verlängerung|abholcode|konto|hinweis", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex DueDateRegex = new("(\\d{1,2}\\.\\d{1,2}\\.\\d{2,4})", RegexOptions.Compiled);
+    private static readonly Regex TableRowRegex = new("<tr[^>]*>(?<row>.*?)</tr>", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex TableCellRegex = new("<t[dh][^>]*>(?<cell>.*?)</t[dh]>", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex TitleLineSeparatorRegex = new("\\s*\\|\\s*|\\r?\\n", RegexOptions.Compiled);
+    private static readonly Regex AnyWhitespaceRegex = new("\\s+", RegexOptions.Compiled);
+    private static readonly Regex ScriptAndStyleRegex = new("<script.*?</script>|<style.*?</style>", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex StructuralTagRegex = new("</?(tr|td|th|div|li|p|br|h1|h2|h3)[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex FallbackNoiseRegex = new("sprecher|autor|regie|hinweis|heute verlängert|verlängerung|abholcode", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex LoanContextRegex = new("bibliothek|fällig|verläng|ausleih|entliehen|loan|checkout", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     public static IReadOnlyList<VoebbLoanItem> ParseLoansFromHtml(string html)
     {
         static string CleanText(string raw)
         {
-            var withLineBreaks = Regex.Replace(raw, "<br\\s*/?>", "\n", RegexOptions.IgnoreCase);
-            var withoutTags = Regex.Replace(withLineBreaks, "<.*?>", " ", RegexOptions.Singleline);
+            var withLineBreaks = HtmlLineBreakRegex.Replace(raw, "\n");
+            var withoutTags = HtmlTagRegex.Replace(withLineBreaks, " ");
             var decoded = WebUtility.HtmlDecode(withoutTags);
-            return Regex.Replace(decoded, "[ \t\r\f\v]+", " ").Trim();
+            return InlineWhitespaceRegex.Replace(decoded, " ").Trim();
         }
 
         static string PickLoanName(IEnumerable<string> lines)
@@ -25,17 +41,17 @@ public static class VoebbLoanParser
                     continue;
                 }
 
-                if (Regex.IsMatch(line, "^\\[.*\\]$"))
+                if (BracketedLineRegex.IsMatch(line))
                 {
                     continue;
                 }
 
-                if (Regex.IsMatch(line, "^\\d{6,}$"))
+                if (NumericIdentifierRegex.IsMatch(line))
                 {
                     continue;
                 }
 
-                if (Regex.IsMatch(line, "sprecher|autor|regie|bibliothek|fällig|verlängerung|abholcode|konto|hinweis", RegexOptions.IgnoreCase))
+                if (LoanMetadataRegex.IsMatch(line))
                 {
                     continue;
                 }
@@ -52,13 +68,13 @@ public static class VoebbLoanParser
                 && value.Contains(':', StringComparison.Ordinal);
 
         var result = new List<VoebbLoanItem>();
-        var rows = Regex.Matches(html, "<tr[^>]*>(?<row>.*?)</tr>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        var rows = TableRowRegex.Matches(html);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (Match rowMatch in rows)
         {
             var rowHtml = rowMatch.Groups["row"].Value;
-            var cellMatches = Regex.Matches(rowHtml, "<t[dh][^>]*>(?<cell>.*?)</t[dh]>", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            var cellMatches = TableCellRegex.Matches(rowHtml);
             if (cellMatches.Count < 3)
             {
                 continue;
@@ -71,14 +87,13 @@ public static class VoebbLoanParser
                 continue;
             }
 
-            var dateRegex = new Regex("(\\d{1,2}\\.\\d{1,2}\\.\\d{2,4})", RegexOptions.Compiled);
-            var dueCellIndex = cells.FindIndex(cell => dateRegex.IsMatch(cell));
+            var dueCellIndex = cells.FindIndex(DueDateRegex.IsMatch);
             if (dueCellIndex < 0)
             {
                 continue;
             }
 
-            var dueDate = dateRegex.Match(cells[dueCellIndex]).Groups[1].Value;
+            var dueDate = DueDateRegex.Match(cells[dueCellIndex]).Groups[1].Value;
             if (string.IsNullOrWhiteSpace(dueDate))
             {
                 continue;
@@ -93,7 +108,7 @@ public static class VoebbLoanParser
                     .FirstOrDefault(cell => !string.IsNullOrWhiteSpace(cell)
                         && !LooksLikeLibraryColumn(cell)
                         && !cell.Contains("hinweis", StringComparison.OrdinalIgnoreCase)
-                        && !dateRegex.IsMatch(cell));
+                        && !DueDateRegex.IsMatch(cell));
 
                 if (string.IsNullOrWhiteSpace(titleFallback))
                 {
@@ -103,7 +118,7 @@ public static class VoebbLoanParser
                 titleText = titleFallback;
             }
 
-            var lines = Regex.Split(titleText, "\\s*\\|\\s*|\\r?\\n").Where(x => !string.IsNullOrWhiteSpace(x));
+            var lines = TitleLineSeparatorRegex.Split(titleText).Where(x => !string.IsNullOrWhiteSpace(x));
             var loanName = PickLoanName(lines);
 
             result.Add(new VoebbLoanItem
@@ -122,7 +137,7 @@ public static class VoebbLoanParser
     public static IReadOnlyList<VoebbLoanItem> ParseLoansFromTextFallback(string html)
     {
         static string Normalize(string value)
-            => Regex.Replace(WebUtility.HtmlDecode(value), "\\s+", " ").Trim();
+            => AnyWhitespaceRegex.Replace(WebUtility.HtmlDecode(value), " ").Trim();
 
         static bool IsNoise(string line)
         {
@@ -131,22 +146,22 @@ public static class VoebbLoanParser
                 return true;
             }
 
-            if (Regex.IsMatch(line, "^\\[.*\\]$"))
+            if (BracketedLineRegex.IsMatch(line))
             {
                 return true;
             }
 
-            if (Regex.IsMatch(line, "^\\d{6,}$"))
+            if (NumericIdentifierRegex.IsMatch(line))
             {
                 return true;
             }
 
-            return Regex.IsMatch(line, "sprecher|autor|regie|hinweis|heute verlängert|verlängerung|abholcode", RegexOptions.IgnoreCase);
+            return FallbackNoiseRegex.IsMatch(line);
         }
 
-        var withoutScripts = Regex.Replace(html, "<script.*?</script>|<style.*?</style>", string.Empty, RegexOptions.IgnoreCase | RegexOptions.Singleline);
-        var withBreaks = Regex.Replace(withoutScripts, "</?(tr|td|th|div|li|p|br|h1|h2|h3)[^>]*>", "\n", RegexOptions.IgnoreCase);
-        var plainText = Regex.Replace(withBreaks, "<.*?>", " ", RegexOptions.Singleline);
+        var withoutScripts = ScriptAndStyleRegex.Replace(html, string.Empty);
+        var withBreaks = StructuralTagRegex.Replace(withoutScripts, "\n");
+        var plainText = HtmlTagRegex.Replace(withBreaks, " ");
 
         var lines = plainText
             .Split('\n')
@@ -156,11 +171,9 @@ public static class VoebbLoanParser
 
         var results = new List<VoebbLoanItem>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var dateRegex = new Regex("(\\d{1,2}\\.\\d{1,2}\\.\\d{2,4})", RegexOptions.Compiled);
-
         for (var i = 0; i < lines.Count; i++)
         {
-            var dateMatch = dateRegex.Match(lines[i]);
+            var dateMatch = DueDateRegex.Match(lines[i]);
             if (!dateMatch.Success)
             {
                 continue;
@@ -168,7 +181,7 @@ public static class VoebbLoanParser
 
             var dueDate = dateMatch.Groups[1].Value;
             var window = lines.Skip(i).Take(12).ToList();
-            if (!window.Any(x => Regex.IsMatch(x, "bibliothek|fällig|verläng|ausleih|entliehen|loan|checkout", RegexOptions.IgnoreCase)))
+            if (!window.Any(LoanContextRegex.IsMatch))
             {
                 continue;
             }
@@ -176,7 +189,7 @@ public static class VoebbLoanParser
             var titleCandidates = window
                 .Skip(1)
                 .Where(x => !IsNoise(x))
-                .Where(x => !dateRegex.IsMatch(x))
+                .Where(x => !DueDateRegex.IsMatch(x))
                 .ToList();
 
             if (titleCandidates.Count == 0)

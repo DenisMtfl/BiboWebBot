@@ -49,13 +49,10 @@ public sealed class MqttPublishService(IConfiguration configuration, ILogger<Mqt
             await client.ConnectAsync(optionsBuilder.Build(), cancellationToken);
 
             var dateText = dueDate.ToString("dd.MM.yyyy", CultureInfo.GetCultureInfo("de-DE"));
-            var payload = string.IsNullOrWhiteSpace(accountLabel)
-                ? $"{dateText}"
-                : $"{dateText}";
 
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(settings.Topic)
-                .WithPayload(payload)
+                .WithPayload(dateText)
                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                 .Build();
 
