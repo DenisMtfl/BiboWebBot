@@ -1,0 +1,629 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "BiboWebBot.HomeAssistant/1.0.0": {
+        "dependencies": {
+          "BiboWebBot.Mqtt": "1.0.0",
+          "BiboWebBot.VoebbParsing": "1.0.0",
+          "NetDaemon.AppModel": "26.11.0",
+          "NetDaemon.AppModel.SourceDeployedApps": "26.11.0",
+          "NetDaemon.Client": "26.11.0",
+          "NetDaemon.Extensions.Logging": "26.11.0",
+          "NetDaemon.Extensions.Scheduling": "26.11.0",
+          "NetDaemon.Extensions.Tts": "26.11.0",
+          "NetDaemon.HassModel": "26.11.0",
+          "NetDaemon.Runtime": "26.11.0"
+        },
+        "runtime": {
+          "BiboWebBot.HomeAssistant.dll": {}
+        }
+      },
+      "Angle/3.6.0": {
+        "runtime": {
+          "lib/net10.0/Innovative.Geometry.Angle.dll": {
+            "assemblyVersion": "3.6.0.0",
+            "fileVersion": "3.6.0.0"
+          }
+        }
+      },
+      "Cronos/0.11.1": {
+        "runtime": {
+          "lib/net6.0/Cronos.dll": {
+            "assemblyVersion": "0.0.0.0",
+            "fileVersion": "0.11.1.1589"
+          }
+        }
+      },
+      "Microsoft.CodeAnalysis.Common/5.3.0": {
+        "runtime": {
+          "lib/net10.0/Microsoft.CodeAnalysis.dll": {
+            "assemblyVersion": "5.3.0.0",
+            "fileVersion": "5.300.26.7805"
+          }
+        },
+        "resources": {
+          "lib/net10.0/cs/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "cs"
+          },
+          "lib/net10.0/de/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "de"
+          },
+          "lib/net10.0/es/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "es"
+          },
+          "lib/net10.0/fr/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "fr"
+          },
+          "lib/net10.0/it/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "it"
+          },
+          "lib/net10.0/ja/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "ja"
+          },
+          "lib/net10.0/ko/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "ko"
+          },
+          "lib/net10.0/pl/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "pl"
+          },
+          "lib/net10.0/pt-BR/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "pt-BR"
+          },
+          "lib/net10.0/ru/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "ru"
+          },
+          "lib/net10.0/tr/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "tr"
+          },
+          "lib/net10.0/zh-Hans/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "zh-Hans"
+          },
+          "lib/net10.0/zh-Hant/Microsoft.CodeAnalysis.resources.dll": {
+            "locale": "zh-Hant"
+          }
+        }
+      },
+      "Microsoft.CodeAnalysis.CSharp/5.3.0": {
+        "dependencies": {
+          "Microsoft.CodeAnalysis.Common": "5.3.0"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.CodeAnalysis.CSharp.dll": {
+            "assemblyVersion": "5.3.0.0",
+            "fileVersion": "5.300.26.7805"
+          }
+        },
+        "resources": {
+          "lib/net10.0/cs/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "cs"
+          },
+          "lib/net10.0/de/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "de"
+          },
+          "lib/net10.0/es/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "es"
+          },
+          "lib/net10.0/fr/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "fr"
+          },
+          "lib/net10.0/it/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "it"
+          },
+          "lib/net10.0/ja/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "ja"
+          },
+          "lib/net10.0/ko/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "ko"
+          },
+          "lib/net10.0/pl/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "pl"
+          },
+          "lib/net10.0/pt-BR/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "pt-BR"
+          },
+          "lib/net10.0/ru/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "ru"
+          },
+          "lib/net10.0/tr/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "tr"
+          },
+          "lib/net10.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "zh-Hans"
+          },
+          "lib/net10.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+            "locale": "zh-Hant"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyModel/10.0.0": {
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.DependencyModel.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "MQTTnet/4.3.7.1207": {
+        "runtime": {
+          "lib/net7.0/MQTTnet.dll": {
+            "assemblyVersion": "4.3.7.1207",
+            "fileVersion": "4.3.7.1207"
+          }
+        }
+      },
+      "NetDaemon.AppModel/26.11.0": {
+        "dependencies": {
+          "System.Reactive": "6.1.0",
+          "YamlDotNet": "16.3.0"
+        },
+        "runtime": {
+          "lib/net10.0/NetDaemon.AppModel.dll": {
+            "assemblyVersion": "26.11.0.0",
+            "fileVersion": "26.11.0.0"
+          }
+        }
+      },
+      "NetDaemon.AppModel.SourceDeployedApps/26.11.0": {
+        "dependencies": {
+          "Microsoft.CodeAnalysis.CSharp": "5.3.0",
+          "NetDaemon.AppModel": "26.11.0",
+          "System.Reactive": "6.1.0",
+          "YamlDotNet": "16.3.0"
+        },
+        "runtime": {
+          "lib/net10.0/NetDaemon.AppModel.SourceDeployedApps.dll": {
+            "assemblyVersion": "26.11.0.0",
+            "fileVersion": "26.11.0.0"
+          }
+        }
+      },
+      "NetDaemon.Client/26.11.0": {
+        "dependencies": {
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net10.0/NetDaemon.Client.dll": {
+            "assemblyVersion": "26.11.0.0",
+            "fileVersion": "26.11.0.0"
+          }
+        }
+      },
+      "NetDaemon.Extensions.Logging/26.11.0": {
+        "dependencies": {
+          "Serilog.AspNetCore": "10.0.0",
+          "Serilog.Sinks.Console": "6.1.1"
+        },
+        "runtime": {
+          "lib/net10.0/NetDaemon.Extensions.Logging.dll": {
+            "assemblyVersion": "26.11.0.0",
+            "fileVersion": "26.11.0.0"
+          }
+        }
+      },
+      "NetDaemon.Extensions.Scheduling/26.11.0": {
+        "dependencies": {
+          "Cronos": "0.11.1",
+          "SolarCalculator": "3.6.0",
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net10.0/NetDaemon.Extensions.Scheduling.dll": {
+            "assemblyVersion": "26.11.0.0",
+            "fileVersion": "26.11.0.0"
+          }
+        }
+      },
+      "NetDaemon.Extensions.Tts/26.11.0": {
+        "dependencies": {
+          "NetDaemon.Client": "26.11.0"
+        },
+        "runtime": {
+          "lib/net10.0/NetDaemon.Extensions.Tts.dll": {
+            "assemblyVersion": "26.11.0.0",
+            "fileVersion": "26.11.0.0"
+          }
+        }
+      },
+      "NetDaemon.HassModel/26.11.0": {
+        "dependencies": {
+          "NetDaemon.Client": "26.11.0",
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net10.0/NetDaemon.HassModel.dll": {
+            "assemblyVersion": "26.11.0.0",
+            "fileVersion": "26.11.0.0"
+          }
+        }
+      },
+      "NetDaemon.HassModel.Integration/26.11.0": {
+        "dependencies": {
+          "NetDaemon.HassModel": "26.11.0",
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net10.0/NetDaemon.HassModel.Integration.dll": {
+            "assemblyVersion": "26.11.0.0",
+            "fileVersion": "26.11.0.0"
+          }
+        }
+      },
+      "NetDaemon.Runtime/26.11.0": {
+        "dependencies": {
+          "NetDaemon.AppModel": "26.11.0",
+          "NetDaemon.Client": "26.11.0",
+          "NetDaemon.HassModel": "26.11.0",
+          "NetDaemon.HassModel.Integration": "26.11.0",
+          "System.Reactive": "6.1.0"
+        },
+        "runtime": {
+          "lib/net10.0/NetDaemon.Runtime.dll": {
+            "assemblyVersion": "26.11.0.0",
+            "fileVersion": "26.11.0.0"
+          }
+        }
+      },
+      "Serilog/4.3.0": {
+        "runtime": {
+          "lib/net9.0/Serilog.dll": {
+            "assemblyVersion": "4.3.0.0",
+            "fileVersion": "4.3.0.0"
+          }
+        }
+      },
+      "Serilog.AspNetCore/10.0.0": {
+        "dependencies": {
+          "Serilog": "4.3.0",
+          "Serilog.Extensions.Hosting": "10.0.0",
+          "Serilog.Formatting.Compact": "3.0.0",
+          "Serilog.Settings.Configuration": "10.0.0",
+          "Serilog.Sinks.Console": "6.1.1",
+          "Serilog.Sinks.Debug": "3.0.0",
+          "Serilog.Sinks.File": "7.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Serilog.AspNetCore.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.0.0"
+          }
+        }
+      },
+      "Serilog.Extensions.Hosting/10.0.0": {
+        "dependencies": {
+          "Serilog": "4.3.0",
+          "Serilog.Extensions.Logging": "10.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Serilog.Extensions.Hosting.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.0.0"
+          }
+        }
+      },
+      "Serilog.Extensions.Logging/10.0.0": {
+        "dependencies": {
+          "Serilog": "4.3.0"
+        },
+        "runtime": {
+          "lib/net10.0/Serilog.Extensions.Logging.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.0.0"
+          }
+        }
+      },
+      "Serilog.Formatting.Compact/3.0.0": {
+        "dependencies": {
+          "Serilog": "4.3.0"
+        },
+        "runtime": {
+          "lib/net8.0/Serilog.Formatting.Compact.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "3.0.0.0"
+          }
+        }
+      },
+      "Serilog.Settings.Configuration/10.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyModel": "10.0.0",
+          "Serilog": "4.3.0"
+        },
+        "runtime": {
+          "lib/net10.0/Serilog.Settings.Configuration.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.0.0"
+          }
+        }
+      },
+      "Serilog.Sinks.Console/6.1.1": {
+        "dependencies": {
+          "Serilog": "4.3.0"
+        },
+        "runtime": {
+          "lib/net8.0/Serilog.Sinks.Console.dll": {
+            "assemblyVersion": "6.1.1.0",
+            "fileVersion": "6.1.1.0"
+          }
+        }
+      },
+      "Serilog.Sinks.Debug/3.0.0": {
+        "dependencies": {
+          "Serilog": "4.3.0"
+        },
+        "runtime": {
+          "lib/net8.0/Serilog.Sinks.Debug.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "3.0.0.0"
+          }
+        }
+      },
+      "Serilog.Sinks.File/7.0.0": {
+        "dependencies": {
+          "Serilog": "4.3.0"
+        },
+        "runtime": {
+          "lib/net9.0/Serilog.Sinks.File.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.0.0"
+          }
+        }
+      },
+      "SolarCalculator/3.6.0": {
+        "dependencies": {
+          "Angle": "3.6.0"
+        },
+        "runtime": {
+          "lib/net10.0/Innovative.SolarCalculator.dll": {
+            "assemblyVersion": "3.6.0.0",
+            "fileVersion": "3.6.0.0"
+          }
+        }
+      },
+      "System.Reactive/6.1.0": {
+        "runtime": {
+          "lib/net6.0/System.Reactive.dll": {
+            "assemblyVersion": "6.1.0.0",
+            "fileVersion": "6.1.0.62682"
+          }
+        }
+      },
+      "YamlDotNet/16.3.0": {
+        "runtime": {
+          "lib/net8.0/YamlDotNet.dll": {
+            "assemblyVersion": "16.0.0.0",
+            "fileVersion": "16.3.0.0"
+          }
+        }
+      },
+      "BiboWebBot.Mqtt/1.0.0": {
+        "dependencies": {
+          "MQTTnet": "4.3.7.1207"
+        },
+        "runtime": {
+          "BiboWebBot.Mqtt.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "BiboWebBot.VoebbParsing/1.0.0": {
+        "runtime": {
+          "BiboWebBot.VoebbParsing.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BiboWebBot.HomeAssistant/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Angle/3.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-H0J8b5W8CA/9GfN0ltwT6EtosTD1TYEUgHgjRnLLuMtI5MjMQHKnm//VB7bWZ6trGOdIwGpNXMbas00f1voTaQ==",
+      "path": "angle/3.6.0",
+      "hashPath": "angle.3.6.0.nupkg.sha512"
+    },
+    "Cronos/0.11.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-5Ug+giPQITSAdTp/METAsofRSSUi3I5p7t4dlcXnzUgUzwZb4HkOBcYfpHuPwAHrnKJjmyW8amVzLD6mfLpaBg==",
+      "path": "cronos/0.11.1",
+      "hashPath": "cronos.0.11.1.nupkg.sha512"
+    },
+    "Microsoft.CodeAnalysis.Common/5.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-uC0qk3jzTQY7i90ehfnCqaOZpBUGJyPMiHJ3c0jOb8yaPBjWzIhVdNxPbeVzI74DB0C+YgBKPLqUkgFZzua5Mg==",
+      "path": "microsoft.codeanalysis.common/5.3.0",
+      "hashPath": "microsoft.codeanalysis.common.5.3.0.nupkg.sha512"
+    },
+    "Microsoft.CodeAnalysis.CSharp/5.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SQFNGQF4f7UfDXKxMzzGNMr3fjrPDIjLfmRvvVgDCw+dyvEHDaRfHuKA5q0Pr0/JW0Gcw89TxrxrS/MjwBvluQ==",
+      "path": "microsoft.codeanalysis.csharp/5.3.0",
+      "hashPath": "microsoft.codeanalysis.csharp.5.3.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyModel/10.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-RFYJR7APio/BiqdQunRq6DB+nDB6nc2qhHr77mlvZ0q0BT8PubMXN7XicmfzCbrDE/dzhBnUKBRXLTcqUiZDGg==",
+      "path": "microsoft.extensions.dependencymodel/10.0.0",
+      "hashPath": "microsoft.extensions.dependencymodel.10.0.0.nupkg.sha512"
+    },
+    "MQTTnet/4.3.7.1207": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ah7aHXoedWp5m5a4zy2u4phOEVj0QFYzOb5tFKQeV8RRBrxp+1QREF4ymZuG8D+hzB2dhtrrG81WxTFv0PzOeQ==",
+      "path": "mqttnet/4.3.7.1207",
+      "hashPath": "mqttnet.4.3.7.1207.nupkg.sha512"
+    },
+    "NetDaemon.AppModel/26.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ndVnAeVKwrDwRsxngj4n5IPejxmA1AWqwoUpONOo5FmuOFK6rni7rm9esvgwQTrqmHq7KtuO5XQh2vNKEjxKvA==",
+      "path": "netdaemon.appmodel/26.11.0",
+      "hashPath": "netdaemon.appmodel.26.11.0.nupkg.sha512"
+    },
+    "NetDaemon.AppModel.SourceDeployedApps/26.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-vYigb3LgzjZ1soQhtAd9AKPUu4wDkk6/u5uPcZ4L099xKHFncfjjNdwdv/ZnLaGG6NHrLwb49ZIv5Pl627Giew==",
+      "path": "netdaemon.appmodel.sourcedeployedapps/26.11.0",
+      "hashPath": "netdaemon.appmodel.sourcedeployedapps.26.11.0.nupkg.sha512"
+    },
+    "NetDaemon.Client/26.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-TQIdGX0diWiCJqdFURqZLtX1NGBqk9RS0TRNBIuai1Qr8QhLuljOnTYaDPKj8t0Xml7+xO++bc483X1aMc1SRg==",
+      "path": "netdaemon.client/26.11.0",
+      "hashPath": "netdaemon.client.26.11.0.nupkg.sha512"
+    },
+    "NetDaemon.Extensions.Logging/26.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-9aGD+BqwCootP98pQj8eMPsW/WwXmcYEBfx2lrnrd8HmkZOA2QlpKOopxyh3I+NzZYhQfB8NwfUIedtLR4K/ZA==",
+      "path": "netdaemon.extensions.logging/26.11.0",
+      "hashPath": "netdaemon.extensions.logging.26.11.0.nupkg.sha512"
+    },
+    "NetDaemon.Extensions.Scheduling/26.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-keAWRGezfa3qdqmmzsYFO0CBsbd20qwKRMWRy8nCvz0Srs3iQffF0rqhOnRXhjxLNJifinss1dAMpNcoZstK9A==",
+      "path": "netdaemon.extensions.scheduling/26.11.0",
+      "hashPath": "netdaemon.extensions.scheduling.26.11.0.nupkg.sha512"
+    },
+    "NetDaemon.Extensions.Tts/26.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-1EWOtPwIx5+7n8xgMLVCm1RIprtKLk27C5X55RZib+o4mYRyurJcN8IsSA9DhU1Ie4U8cZsHFeChfcVzR7Y4ow==",
+      "path": "netdaemon.extensions.tts/26.11.0",
+      "hashPath": "netdaemon.extensions.tts.26.11.0.nupkg.sha512"
+    },
+    "NetDaemon.HassModel/26.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-D1rXQ4XZSl51ptmNI9Q8bshHu+mjuKpi/AOMZQkZYtwzDb9AX2DMoDBfxWpp4nWewD+FziGMy/kIN4UIAI3j+A==",
+      "path": "netdaemon.hassmodel/26.11.0",
+      "hashPath": "netdaemon.hassmodel.26.11.0.nupkg.sha512"
+    },
+    "NetDaemon.HassModel.Integration/26.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-CXLnaRReBB9XUFxfegdkxwU+vCb9CqkhR4sTWLisa47EdvmdK7re13XksG7V9l47Art35wgeanSqC/5ze7ELUw==",
+      "path": "netdaemon.hassmodel.integration/26.11.0",
+      "hashPath": "netdaemon.hassmodel.integration.26.11.0.nupkg.sha512"
+    },
+    "NetDaemon.Runtime/26.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ETyyqt4Gv9bVqNLww+079c5gWFH3bhE2qltbanIj0mWJSnXb52qRJlCeNQTDBOYBOtDA2UrVSFOoUGfPdtJtUg==",
+      "path": "netdaemon.runtime/26.11.0",
+      "hashPath": "netdaemon.runtime.26.11.0.nupkg.sha512"
+    },
+    "Serilog/4.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+cDryFR0GRhsGOnZSKwaDzRRl4MupvJ42FhCE4zhQRVanX0Jpg6WuCBk59OVhVDPmab1bB+nRykAnykYELA9qQ==",
+      "path": "serilog/4.3.0",
+      "hashPath": "serilog.4.3.0.nupkg.sha512"
+    },
+    "Serilog.AspNetCore/10.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-a/cNa1mY4On1oJlfGG1wAvxjp5g7OEzk/Jf/nm7NF9cWoE7KlZw1GldrifUBWm9oKibHkR7Lg/l5jy3y7ACR8w==",
+      "path": "serilog.aspnetcore/10.0.0",
+      "hashPath": "serilog.aspnetcore.10.0.0.nupkg.sha512"
+    },
+    "Serilog.Extensions.Hosting/10.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-E7juuIc+gzoGxgzFooFgAV8g9BfiSXNKsUok9NmEpyAXg2odkcPsMa/Yo4axkJRlh0se7mkYQ1GXDaBemR+b6w==",
+      "path": "serilog.extensions.hosting/10.0.0",
+      "hashPath": "serilog.extensions.hosting.10.0.0.nupkg.sha512"
+    },
+    "Serilog.Extensions.Logging/10.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-vx0kABKl2dWbBhhqAfTOk53/i8aV/5VaT3a6il9gn72Wqs2pM7EK2OB6No6xdqK2IaY6Zf9gdjLuK9BVa2rT+Q==",
+      "path": "serilog.extensions.logging/10.0.0",
+      "hashPath": "serilog.extensions.logging.10.0.0.nupkg.sha512"
+    },
+    "Serilog.Formatting.Compact/3.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-wQsv14w9cqlfB5FX2MZpNsTawckN4a8dryuNGbebB/3Nh1pXnROHZov3swtu3Nj5oNG7Ba+xdu7Et/ulAUPanQ==",
+      "path": "serilog.formatting.compact/3.0.0",
+      "hashPath": "serilog.formatting.compact.3.0.0.nupkg.sha512"
+    },
+    "Serilog.Settings.Configuration/10.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-LNq+ibS1sbhTqPV1FIE69/9AJJbfaOhnaqkzcjFy95o+4U+STsta9mi97f1smgXsWYKICDeGUf8xUGzd/52/uA==",
+      "path": "serilog.settings.configuration/10.0.0",
+      "hashPath": "serilog.settings.configuration.10.0.0.nupkg.sha512"
+    },
+    "Serilog.Sinks.Console/6.1.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8jbqgjUyZlfCuSTaJk6lOca465OndqOz3KZP6Cryt/IqZYybyBu7GP0fE/AXBzrrQB3EBmQntBFAvMVz1COvAA==",
+      "path": "serilog.sinks.console/6.1.1",
+      "hashPath": "serilog.sinks.console.6.1.1.nupkg.sha512"
+    },
+    "Serilog.Sinks.Debug/3.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-4BzXcdrgRX7wde9PmHuYd9U6YqycCC28hhpKonK7hx0wb19eiuRj16fPcPSVp0o/Y1ipJuNLYQ00R3q2Zs8FDA==",
+      "path": "serilog.sinks.debug/3.0.0",
+      "hashPath": "serilog.sinks.debug.3.0.0.nupkg.sha512"
+    },
+    "Serilog.Sinks.File/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-fKL7mXv7qaiNBUC71ssvn/dU0k9t0o45+qm2XgKAlSt19xF+ijjxyA3R6HmCgfKEKwfcfkwWjayuQtRueZFkYw==",
+      "path": "serilog.sinks.file/7.0.0",
+      "hashPath": "serilog.sinks.file.7.0.0.nupkg.sha512"
+    },
+    "SolarCalculator/3.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-z9AzQMH/AOmqTUrY3+Gd5loj/oZceO+GypmUEqWGli6Ctm7FKcGHqcPjM4c4KRUdt5m/qvGwI/uvx49ZBIUixg==",
+      "path": "solarcalculator/3.6.0",
+      "hashPath": "solarcalculator.3.6.0.nupkg.sha512"
+    },
+    "System.Reactive/6.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-M5cCC1ZMkZr9jbSQGTHnVkb5TDN67qWCV7AP8TAHdGkvDlu0puT5NzemESNn9+HkYIDpWpocP68/i+/ame2/2w==",
+      "path": "system.reactive/6.1.0",
+      "hashPath": "system.reactive.6.1.0.nupkg.sha512"
+    },
+    "YamlDotNet/16.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SgMOdxbz8X65z8hraIs6hOEdnkH6hESTAIUa7viEngHOYaH+6q5XJmwr1+yb9vJpNQ19hCQY69xbFsLtXpobQA==",
+      "path": "yamldotnet/16.3.0",
+      "hashPath": "yamldotnet.16.3.0.nupkg.sha512"
+    },
+    "BiboWebBot.Mqtt/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BiboWebBot.VoebbParsing/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

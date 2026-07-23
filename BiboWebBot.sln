@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.7.11925.98 stable
+VisualStudioVersion = 18.7.11925.98
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiboWebBot", "Projekt\BiboWebBot\BiboWebBot.csproj", "{448B8172-A3EB-D393-30A8-722211853AC7}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiboWebBot.Mqtt", "Projekt\BiboWebBot.Mqtt\BiboWebBot.Mqtt.csproj", "{17EE9FCD-6A05-E462-6978-3922A60A9C59}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiboWebBot.Tests", "Projekt\BiboWebBot.Tests\BiboWebBot.Tests.csproj", "{7D5FD76E-3A5F-DE2A-A820-BAD80968A0E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiboWebBot.HomeAssistant", "Projekt\BiboWebBot.HomeAssistant\BiboWebBot.HomeAssistant.csproj", "{81CAEC19-1527-CE1D-FE7B-B4AFF9E5F95D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{7D5FD76E-3A5F-DE2A-A820-BAD80968A0E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D5FD76E-3A5F-DE2A-A820-BAD80968A0E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D5FD76E-3A5F-DE2A-A820-BAD80968A0E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81CAEC19-1527-CE1D-FE7B-B4AFF9E5F95D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81CAEC19-1527-CE1D-FE7B-B4AFF9E5F95D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81CAEC19-1527-CE1D-FE7B-B4AFF9E5F95D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81CAEC19-1527-CE1D-FE7B-B4AFF9E5F95D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

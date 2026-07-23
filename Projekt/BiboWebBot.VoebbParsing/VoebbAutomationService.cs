@@ -39,12 +39,9 @@ public sealed class VoebbAutomationService : IVoebbAutomationService
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromMinutes(3));
 
-            var cookieContainer = new CookieContainer();
             using var handler = new HttpClientHandler
             {
-                CookieContainer = cookieContainer,
-                AllowAutoRedirect = true,
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
+                AllowAutoRedirect = true
             };
 
             using var client = new HttpClient(handler)
