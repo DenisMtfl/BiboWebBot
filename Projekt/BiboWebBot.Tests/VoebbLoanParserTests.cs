@@ -56,14 +56,48 @@ public class VoebbLoanParserTests
     {
         var html = """
         <table>
-          <tr><td>01.09.2026</td><td>Hinweis</td><td>Pop-Up-Sommerbibliothek</td></tr>
-          <tr><td>01.09.2026</td><td>Hinweis</td><td>Pop-Up-Sommerbibliothek</td></tr>
+          <tr><td>Fällig: 01.09.2026</td><td>Hinweis</td><td>Pop-Up-Sommerbibliothek</td></tr>
+          <tr><td>Fällig: 01.09.2026</td><td>Hinweis</td><td>Pop-Up-Sommerbibliothek</td></tr>
         </table>
         """;
 
         var loans = VoebbLoanParser.ParseLoansFromHtml(html);
 
         Assert.Single(loans);
+    }
+
+    [Fact]
+    public void ParseLoansFromHtml_IgnoresDatedAccountOverviewRowsWhenThereAreNoLoans()
+    {
+        var html = """
+        <h2>Ausleihen</h2>
+        <table>
+          <tr><td>20.01.2027</td><td>Information</td><td>Kontostand vom:</td></tr>
+          <tr><td>22.07.2026</td><td>Information</td><td>93 Mahnungen</td></tr>
+        </table>
+        """;
+
+        var loans = VoebbLoanParser.ParseLoansFromHtml(html);
+
+        Assert.Empty(loans);
+    }
+
+    [Fact]
+    public void ParseLoansFromTextFallback_IgnoresUnrelatedDatesNearLoansHeading()
+    {
+        var html = """
+        <div>
+          <h2>Ausleihen</h2>
+          <p>Kontostand vom:</p>
+          <p>20.01.2027</p>
+          <p>93 Mahnungen</p>
+          <p>22.07.2026</p>
+        </div>
+        """;
+
+        var loans = VoebbLoanParser.ParseLoansFromTextFallback(html);
+
+        Assert.Empty(loans);
     }
 
     [Fact]

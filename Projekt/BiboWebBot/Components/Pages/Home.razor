@@ -102,6 +102,15 @@
         </div>
     </div>
 }
+else if (hasCompletedLoad && !isBusy && !isError)
+{
+    <div class="card" role="status" aria-live="polite">
+        <div class="card-body py-4 text-center">
+            <h2 class="h5 mb-2">Keine aktuellen Ausleihen</h2>
+            <p class="text-muted mb-0">Für die ausgewählten Konten sind derzeit keine Medien ausgeliehen.</p>
+        </div>
+    </div>
+}
 
 @code {
     private const string CredentialsStorageKey = "bibo.credentials";
@@ -115,6 +124,7 @@
     private bool isBusy;
     private bool browserConfigLoaded;
     private bool hasConfiguredBatchAccounts;
+    private bool hasCompletedLoad;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -220,7 +230,9 @@
             .ToList();
 
         statusMessage = errorMessages.Count == 0
-            ? $"Ausleihen für {successCount} Konto/Konten geladen."
+            ? loans.Count == 0
+                ? "Keine aktuellen Ausleihen gefunden."
+                : $"Ausleihen für {successCount} Konto/Konten geladen."
             : $"Teilweise geladen ({successCount}/{results.Count}). {string.Join(" | ", errorMessages)}";
 
         var calendarSyncMessage = await TrySyncEarliestDueDateToGoogleCalendarAsync();
@@ -237,6 +249,7 @@
 
         isError = errorMessages.Count > 0;
         isBusy = false;
+        hasCompletedLoad = true;
         hasConfiguredBatchAccounts = true;
     }
 

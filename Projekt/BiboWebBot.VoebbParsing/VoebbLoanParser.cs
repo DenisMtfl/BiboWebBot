@@ -20,6 +20,9 @@ public static class VoebbLoanParser
     private static readonly Regex StructuralTagRegex = new("</?(tr|td|th|div|li|p|br|h1|h2|h3)[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex FallbackNoiseRegex = new("sprecher|autor|regie|hinweis|heute verlängert|verlängerung|abholcode", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex LoanContextRegex = new("bibliothek|fällig|verläng|ausleih|entliehen|loan|checkout", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex LoanTableRowContextRegex = new("fällig|frist|verläng|ausleih|entliehen|loan|checkout", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex CheckboxInputRegex = new("<input[^>]*type\\s*=\\s*(['\"]?)checkbox\\1", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex FallbackDueDateContextRegex = new("fällig|frist", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public static IReadOnlyList<VoebbLoanItem> ParseLoansFromHtml(string html)
     {
@@ -74,6 +77,13 @@ public static class VoebbLoanParser
         foreach (Match rowMatch in rows)
         {
             var rowHtml = rowMatch.Groups["row"].Value;
+            if (!CheckboxInputRegex.IsMatch(rowHtml) && !LoanTableRowContextRegex.IsMatch(rowHtml))
+            {
+                // Account overview tables also contain dates (for example
+                // "Kontostand vom"), but those rows are not loans.
+                continue;
+            }
+
             var cellMatches = TableCellRegex.Matches(rowHtml);
             if (cellMatches.Count < 3)
             {
@@ -174,7 +184,7 @@ public static class VoebbLoanParser
         for (var i = 0; i < lines.Count; i++)
         {
             var dateMatch = DueDateRegex.Match(lines[i]);
-            if (!dateMatch.Success)
+            if (!dateMatch.Success || !FallbackDueDateContextRegex.IsMatch(lines[i]))
             {
                 continue;
             }
